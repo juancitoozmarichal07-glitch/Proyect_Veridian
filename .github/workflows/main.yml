@@ -1,0 +1,43 @@
+name: Build Veridian (APK DEPURACIÓN)
+
+on:
+  push:
+    branches: [ "main" ] # O "master" si ese es el nombre de tu rama
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 'PASO 1: Clonando tu proyecto...'
+        uses: actions/checkout@v4
+
+      - name: 'PASO 2: Configurando el entorno (Java y Node.js)...'
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: 'PASO 3: Instalando Cordova...'
+        run: npm install -g cordova
+
+      - name: 'PASO 4: Inyectando Claves API...'
+        run: |
+          sed -i 's|const GROQ_API_KEY = "";|const GROQ_API_KEY = "${{ secrets.GROQ_API_KEY }}";|' www/script.js
+          sed -i 's|const HUGGING_FACE_API_KEY = "";|const HUGGING_FACE_API_KEY = "${{ secrets.HUGGING_FACE_API_KEY }}";|' www/script.js
+
+      - name: 'PASO 5: Añadiendo la plataforma Android...'
+        run: cordova platform add android
+
+      - name: 'PASO 6: CONSTRUYENDO EL APK DE DEPURACIÓN...'
+        run: cordova build android --debug
+
+      - name: 'PASO 7: Subiendo el APK de Depuración...'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Veridian-APK-Depuracion
+          path: platforms/android/app/build/outputs/apk/debug/app-debug.apk
