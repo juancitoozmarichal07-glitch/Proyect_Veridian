@@ -2,7 +2,7 @@ name: Build Veridian (APK DEPURACIÓN)
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]
   workflow_dispatch:
 
 jobs:
