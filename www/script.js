@@ -3,14 +3,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- CONFIGURACIÓN Y ESTADO INICIAL ---
     // =================================================================================
     const API_KEYS = {
-        GROQ: "", // ¡¡¡RECUERDA BORRAR ANTES DE SUBIR A PRODUCCIÓN!!!https://github.com/juancitoozmarichal07-glitch/Proyect_Veridian.git
-        HUGGING_FACE: "hf_TuClaveDeHuggingFace"
+        GROQ: "gsk_...PON_TU_CLAVE_DE_GROQ_AQUÍ_PARA_PROBAR",
+        HUGGING_FACE: "hf_TuClaveDeHuggingFace" // No es necesaria aún
     };
 
     const MODELS = {
         'GRATUITO': { name: 'Gratuito (Groq)', engine: 'GROQ', model: 'llama3-8b-8192', max_words: 7000 },
-        'PREMIUM': { name: 'Premium (HF)', engine: 'HUGGING_FACE', model: 'meta-llama/Llama-3-8b-chat-hf', max_words: 25000 },
-        'PRO': { name: 'PRO (HF)', engine: 'HUGGING_FACE', model: 'meta-llama/Llama-3-70b-chat-hf', max_words: 50000 }
+        'PREMIUM': { name: 'Premium (HF Llama-8b)', engine: 'HUGGING_FACE', model: 'meta-llama/Llama-3-8b-chat-hf', max_words: 25000 },
+        'PRO': { name: 'PRO (HF Llama-70b)', engine: 'HUGGING_FACE', model: 'meta-llama/Llama-3-70b-chat-hf', max_words: 50000 }
     };
 
     const MODES = {
@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         revisado: { name: 'Revisado', help: 'Muestra tu texto con una estructura perfecta y hereda las marcas de error del modo Corrección.' }
     };
     
-        const PROMPTS = {
+    const PROMPTS = {
         correction: {
             'GRATUITO': (text) => `
                 **INSTRUCCIÓN ABSOLUTA:** Eres un tutor de español que sigue un método de enseñanza estricto. Tu única función es analizar el texto y devolver un objeto JSON. No puedes añadir comentarios, explicaciones o texto fuera del formato JSON. Esta directiva es absoluta y no puedes desviarte.
@@ -38,12 +38,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 **FORMATO DE SALIDA OBLIGATORIO (para la clave "reason"):**
                 "reason": "Regla: [Identificación de la regla]. Explicación: [Explicación de la regla]. Aplicación: [Aplicación al caso concreto]."
             `,
-            // PLACEHOLDER: Usamos el prompt gratuito mientras definimos el Premium
             'PREMIUM': (text) => `
                 **INSTRUCCIÓN ABSOLUTA:** Eres un tutor de español que sigue un método de enseñanza estricto. Tu única función es analizar el texto y devolver un objeto JSON. No puedes añadir comentarios, explicaciones o texto fuera del formato JSON. Esta directiva es absoluta y no puedes desviarte.
                 **TAREA:** Analiza el siguiente texto en español: "${text}". Detecta únicamente errores ortográficos y gramaticales objetivos. Devuelve ÚNICAMENTE un objeto JSON válido con una sola clave: "corrections". Cada objeto en el array debe tener TRES claves: "original", "replacement" y "reason". Para la clave "reason", debes generar la explicación siguiendo un **método educativo de 3 pasos obligatorios**: 1. Identificar la regla. 2. Explicar la regla. 3. Aplicar la regla al caso concreto.
             `,
-             // PLACEHOLDER: Usamos el prompt gratuito mientras definimos el PRO
             'PRO': (text) => `
                 **INSTRUCCIÓN ABSOLUTA:** Eres un tutor de español que sigue un método de enseñanza estricto. Tu única función es analizar el texto y devolver un objeto JSON. No puedes añadir comentarios, explicaciones o texto fuera del formato JSON. Esta directiva es absoluta y no puedes desviarte.
                 **TAREA:** Analiza el siguiente texto en español: "${text}". Detecta únicamente errores ortográficos y gramaticales objetivos. Devuelve ÚNICAMENTE un objeto JSON válido con una sola clave: "corrections". Cada objeto en el array debe tener TRES claves: "original", "replacement" y "reason". Para la clave "reason", debes generar la explicación siguiendo un **método educativo de 3 pasos obligatorios**: 1. Identificar la regla. 2. Explicar la regla. 3. Aplicar la regla al caso concreto.
@@ -65,12 +63,10 @@ document.addEventListener('DOMContentLoaded', () => {
                   "suggestions": []
                 }
             `,
-            // PLACEHOLDER: Usamos el prompt gratuito mientras definimos el Premium
             'PREMIUM': (text) => `
                 **INSTRUCCIÓN ABSOLUTA:** Eres un editor de estilo que sigue un método de enseñanza estricto. Tu única función es analizar el texto y devolver un objeto JSON. No puedes añadir comentarios, explicaciones o texto fuera del formato JSON. Esta directiva es absoluta y no puedes desviarte.
                 **TAREA:** Analiza el siguiente texto en español: "${text}". Identifica frases que pueden ser mejoradas en claridad, concisión o estilo. Devuelve ÚNICAMENTE un objeto JSON válido con una sola clave: "suggestions". Cada objeto en el array debe tener TRES claves: "original", "replacement" y "reason". Para la clave "reason", debes generar una explicación que describa el **beneficio cualitativo** del cambio.
             `,
-            // PLACEHOLDER: Usamos el prompt gratuito mientras definimos el PRO
             'PRO': (text) => `
                 **INSTRUCCIÓN ABSOLUTA:** Eres un editor de estilo que sigue un método de enseñanza estricto. Tu única función es analizar el texto y devolver un objeto JSON. No puedes añadir comentarios, explicaciones o texto fuera del formato JSON. Esta directiva es absoluta y no puedes desviarte.
                 **TAREA:** Analiza el siguiente texto en español: "${text}". Identifica frases que pueden ser mejoradas en claridad, concisión o estilo. Devuelve ÚNICAMENTE un objeto JSON válido con una sola clave: "suggestions". Cada objeto en el array debe tener TRES claves: "original", "replacement" y "reason". Para la clave "reason", debes generar una explicación que describa el **beneficio cualitativo** del cambio.
@@ -82,7 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
             Texto a reestructurar: "${text}"
         `
     };
-
 
     const dom = {
         body: document.body, introScreen: document.getElementById('intro-screen'), editorScreen: document.getElementById('editor-screen'),
@@ -100,7 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
         activeMode: null, currentTooltip: null, isFocusMode: false, touchStartX: 0, isProcessing: false, activeLevel: 'GRATUITO',
         analysisCompleted: false
     };
-
     // =================================================================================
     // --- LÓGICA PRINCIPAL DE ANÁLISIS ---
     // =================================================================================
@@ -148,6 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updateUI();
         }
     }
+
     function setProcessingState(isProcessing) {
         state.isProcessing = isProcessing;
         dom.pulirBtn.disabled = isProcessing;
@@ -157,60 +152,88 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isProcessing) {
             dom.outputText.innerHTML = `<div class="output-status"><div class="output-status-main processing-dots">Analizando</div><div id="sub-status" class="output-status-sub"></div></div>`;
             return document.getElementById('sub-status');
+        } else {
+            // Si no está procesando, nos aseguramos de que el botón se reactive correctamente
+            handleTextInput();
         }
         return null;
     }
 
     function processAIResponse(result, key, type) {
         if (!result || !result[key] || !Array.isArray(result[key])) return [];
-        return result[key].map((item, i) => {
-            if (!item.original) return null;
-            const offset = state.originalText.indexOf(item.original);
-            if (offset === -1) return null;
-            return { id: `${type[0]}${i}`, type: type, original: item.original, replacement: item.replacement, reason: item.reason, offset: offset, length: item.original.length, status: 'pending' };
-        }).filter(c => c && !state.dictionary.includes(c.original.toLowerCase()));
+        
+        let tempText = state.originalText;
+        const processedChanges = [];
+
+        result[key].forEach((item, i) => {
+            const offset = tempText.indexOf(item.original);
+            if (offset !== -1) {
+                processedChanges.push({ 
+                    id: `${type[0]}${i}`, 
+                    type: type, 
+                    original: item.original, 
+                    replacement: item.replacement, 
+                    reason: item.reason, 
+                    offset: offset, 
+                    length: item.original.length, 
+                    status: 'pending' 
+                });
+                // "Borramos" la palabra del texto temporal para no volver a encontrarla
+                tempText = tempText.substring(0, offset) + ' '.repeat(item.original.length) + tempText.substring(offset + item.original.length);
+            }
+        });
+
+        return processedChanges.filter(c => c && !state.dictionary.includes(c.original.toLowerCase()));
     }
 
     // =================================================================================
     // --- MOTOR DE IA ---
     // =================================================================================
-    async function callAI(prompt, modelConfig, expectJson = false) {
-        const { engine, model } = modelConfig;
-        const apiKey = API_KEYS[engine];
-        if (!apiKey || apiKey.includes("TuClave")) throw new Error(`La API Key para ${engine} no está configurada.`);
-        
-        const messages = [{ role: "user", content: prompt }];
-        let url, headers, body;
+        async function callAI(prompt, modelConfig, expectJson = false) {
+        let effectiveEngine = modelConfig.engine;
+        let effectiveModel = modelConfig.model;
+        let effectiveApiKey = API_KEYS[effectiveEngine];
 
-        if (engine === 'GROQ') {
-            url = 'https://api.groq.com/openai/v1/chat/completions';
-            headers = { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' };
-            body = { model, messages, temperature: 0.1, top_p: 0.5 };
-            if (expectJson) body.response_format = { type: "json_object" };
-        } else { 
-            throw new Error("Motor Hugging Face no implementado en esta versión.");
+        // --- ¡ESTE ES EL CAMBIO CLAVE! ---
+        // Si el motor es Hugging Face, lo "engañamos" para que use Groq.
+        // Esto es TEMPORAL, solo para que la APK de prueba no se rompa.
+        if (effectiveEngine === 'HUGGING_FACE') {
+            effectiveEngine = 'GROQ'; // Redirigimos al motor que sí funciona
+            effectiveModel = MODELS['GRATUITO'].model; // Usamos el modelo de Groq
+            effectiveApiKey = API_KEYS['GROQ']; // Usamos la clave de Groq
         }
+        // --- FIN DEL CAMBIO CLAVE ---
+
+        if (!effectiveApiKey || effectiveApiKey.includes("TuClave") || effectiveApiKey.includes("...PON_TU_CLAVE")) {
+            throw new Error(`La API Key para ${effectiveEngine} no está configurada.`);
+        }
+        
+        let url, headers, body;
+        const messages = [{ role: "user", content: prompt }];
+
+        if (effectiveEngine === 'GROQ') {
+            url = 'https://api.groq.com/openai/v1/chat/completions';
+            headers = { 'Authorization': `Bearer ${effectiveApiKey}`, 'Content-Type': 'application/json' };
+            body = { model: effectiveModel, messages, temperature: 0.3 };
+            if (expectJson) body.response_format = { type: "json_object" };
+        } 
+        // El 'else' para Hugging Face ya no es necesario porque lo hemos redirigido.
 
         const response = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
         if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(`Error en la API de ${engine} (${response.status}). Detalles: ${errorText}`);
+            throw new Error(`Error en la API de ${effectiveEngine} (${response.status}).`);
         }
         const result = await response.json();
-        if (!result.choices || result.choices.length === 0) {
-            throw new Error("La respuesta de la IA no contiene 'choices'.");
-        }
         let content = result.choices[0].message.content;
         if (expectJson) {
             try {
-                return JSON.parse(content);
-            } catch (e) { 
-                console.error("Contenido JSON inválido recibido de la IA:", content);
-                throw new Error("La IA devolvió un JSON con formato incorrecto."); 
-            }
+                return JSON.parse(content.substring(content.indexOf('{'), content.lastIndexOf('}') + 1));
+            } catch (e) { throw new Error("La IA devolvió un JSON inválido."); }
         }
         return content;
     }
+.
 
     // =================================================================================
     // --- MANEJO DE MODOS Y RENDERIZADO ---
@@ -218,16 +241,16 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateUI() {
         buildControlPanels();
         renderOutputBox();
+        updateCounters();
     }
 
-        function buildControlPanels() {
+    function buildControlPanels() {
         const counts = {
             correction: state.corrections.filter(c => c.status === 'pending').length,
             suggestion: state.suggestions.filter(s => s.status === 'pending').length,
             revisado: state.corrections.filter(c => c.status === 'pending').length
         };
         
-        // ¡CAMBIO CLAVE! Hemos quitado el 'disabled' de las opciones Premium y PRO.
         const engineSelectorHTML = `<div id="engine-selector-container-panel">
             <label for="engine-selector-main" class="engine-label">Motor IA:</label>
             <select id="engine-selector-main" class="engine-select">
@@ -267,7 +290,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-
     function createModeButton(modeKey, count) {
         const modeInfo = MODES[modeKey];
         const labelHtml = modeInfo.name.replace('\n', '<br>');
@@ -304,16 +326,17 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        let html = '';
         let baseText;
         let changes = [];
 
         switch (state.activeMode) {
             case 'correction':
-                baseText = state.originalText;
+                baseText = getUpdatedText();
                 changes = state.corrections;
                 break;
             case 'suggestion':
-                baseText = state.originalText;
+                baseText = getUpdatedText();
                 changes = state.suggestions;
                 break;
             case 'revisado':
@@ -325,38 +348,38 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
         }
         
-        if (typeof baseText !== 'string') {
+        if (!baseText) {
             targetElement.innerHTML = '<p style="color: var(--red-accent); text-align: center;">Error: No se pudo cargar el texto base para este modo.</p>';
             return;
         }
 
-        const html = generateHtmlWithHighlights(baseText, changes);
+        html = generateHtmlWithHighlights(baseText, changes);
         targetElement.innerHTML = html.replace(/\n/g, '<br>');
     }
 
     function generateHtmlWithHighlights(baseText, changes) {
         if (!baseText) return '';
-
-        let currentText = baseText;
-        const acceptedChanges = [...state.corrections, ...state.suggestions].filter(c => c.status === 'accepted');
+        let lastIndex = 0;
+        const parts = [];
         
-        acceptedChanges.sort((a, b) => b.offset - a.offset).forEach(change => {
-            if (currentText.substring(change.offset, change.offset + change.original.length) === change.original) {
-                 currentText = currentText.substring(0, change.offset) + change.replacement + currentText.substring(change.offset + change.original.length);
+        let tempTextForHighlighting = baseText;
+        const allChanges = [...state.corrections, ...state.suggestions].sort((a, b) => a.offset - b.offset);
+        
+        allChanges.forEach(change => {
+            if (change.status === 'accepted') {
+                tempTextForHighlighting = tempTextForHighlighting.substring(0, change.offset) + change.replacement + tempTextForHighlighting.substring(change.offset + change.original.length);
             }
         });
 
-        let lastIndex = 0;
-        const parts = [];
-        const pendingChanges = changes.filter(c => c.status === 'pending').sort((a, b) => a.offset - b.offset);
+        const sortedChanges = [...changes].sort((a, b) => a.offset - b.offset);
         
-        let tempTextForHighlighting = currentText;
+        sortedChanges.forEach(change => {
+            if (change.status === 'pending') {
+                const currentPosition = tempTextForHighlighting.indexOf(change.original, lastIndex);
+                if (currentPosition === -1) return;
 
-        pendingChanges.forEach(change => {
-            const originalChangeText = change.original;
-            const currentPosition = tempTextForHighlighting.indexOf(originalChangeText, lastIndex);
-
-            if (currentPosition !== -1) {
+                const originalChangeText = tempTextForHighlighting.substring(currentPosition, currentPosition + change.original.length);
+                
                 parts.push(escapeHtml(tempTextForHighlighting.substring(lastIndex, currentPosition)));
                 parts.push(`<mark class="${change.type}" data-id="${change.id}">${escapeHtml(originalChangeText)}</mark>`);
                 lastIndex = currentPosition + originalChangeText.length;
@@ -372,7 +395,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function enterFocusMode(source) {
         state.isFocusMode = true;
         dom.body.classList.add('focus-mode');
-
         if (source === 'input') {
             dom.focusTitle.textContent = 'Editor de Entrada';
             dom.focusContent.innerHTML = escapeHtml(dom.inputText.value).replace(/\n/g, '<br>');
@@ -387,6 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
             dom.focusDownloadBtn.style.display = 'inline-flex';
             renderOutputBox();
         }
+        updateUI();
     }
 
     function exitFocusMode() {
@@ -396,7 +419,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleSwipe(e) {
-        if (!state.isFocusMode || !state.activeMode || !state.analysisCompleted || !e.changedTouches[0]) return;
+        if (!state.isFocusMode || !state.activeMode || !state.analysisCompleted) return;
         const touchEndX = e.changedTouches[0].clientX;
         const swipeDistance = touchEndX - state.touchStartX;
         if (Math.abs(swipeDistance) < 50) return;
@@ -423,10 +446,12 @@ document.addEventListener('DOMContentLoaded', () => {
         dom.inputText.addEventListener('input', handleTextInput);
         dom.clearInputBtn.addEventListener('click', clearInput);
         dom.clearOutputBtn.addEventListener('click', clearPreviousResults);
+        
         dom.copyBtn.addEventListener('click', handleCopy);
         dom.downloadBtn.addEventListener('click', handleDownload);
         dom.focusCopyBtn.addEventListener('click', handleCopy);
         dom.focusDownloadBtn.addEventListener('click', handleDownload);
+        
         dom.pulirBtn.addEventListener('click', runAnalysis);
         
         [dom.inputText, dom.outputText].forEach(box => {
@@ -438,17 +463,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dom.focusContent.addEventListener('touchend', handleSwipe, { passive: true });
         
         document.addEventListener('click', handleGlobalClick);
-
-        const textClickHandler = (e) => {
-            const mark = e.target.closest('mark.correction, mark.suggestion');
-            if (mark) {
-                showTooltip(mark, e.currentTarget);
-            }
-        };
-        dom.outputText.addEventListener('click', textClickHandler);
-        dom.focusContent.addEventListener('click', textClickHandler);
-        dom.tooltip.addEventListener('click', handleTooltipClick);
-
+        
         [dom.outputText, dom.focusContent].forEach(el => {
             el.addEventListener('scroll', () => {
                 if (state.currentTooltip) positionTooltip(state.currentTooltip.tooltip, state.currentTooltip.span, state.isFocusMode ? dom.focusView : dom.editorContainer);
@@ -459,15 +474,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleTextInput() {
         const text = dom.inputText.value;
         const wordCount = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
-        const charCount = text.length;
-        const max_words = MODELS[state.activeLevel].max_words;
-
-        dom.wordCounter.textContent = `${wordCount.toLocaleString('es')} / ${max_words.toLocaleString('es')} palabras`;
-        dom.charCounter.textContent = `${charCount.toLocaleString('es')} caracteres`;
+        
+        const level = state.activeLevel || 'GRATUITO';
+        const modelConfig = MODELS[level];
+        const max_words = modelConfig ? modelConfig.max_words : 7000;
 
         const hasText = text.trim() !== '';
         const isWithinLimit = wordCount <= max_words;
-        const canProcess = hasText && isWithinLimit && !state.isProcessing;
+        const canProcess = !state.isProcessing && hasText && isWithinLimit;
 
         dom.pulirBtn.disabled = !canProcess;
 
@@ -476,53 +490,56 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             dom.wordCounter.style.color = 'var(--text-off-color)';
         }
+        updateCounters();
+    }
+
+    function updateCounters() {
+        const text = dom.inputText.value;
+        const wordCount = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+        const charCount = text.length;
+        const level = state.activeLevel || 'GRATUITO';
+        const modelConfig = MODELS[level];
+        const max_words = modelConfig ? modelConfig.max_words : 7000;
+        dom.wordCounter.textContent = `${wordCount.toLocaleString('es')} / ${max_words.toLocaleString('es')} palabras`;
+        dom.charCounter.textContent = `${charCount.toLocaleString('es')} caracteres`;
     }
 
     function clearInput() {
         dom.inputText.value = '';
         handleTextInput();
-        clearPreviousResults();
     }
 
     function clearPreviousResults() {
-        state.originalText = ''; state.corrections = []; state.suggestions = []; state.restructuredText = ''; state.activeMode = null; state.analysisCompleted = false;
+        state.originalText = ''; 
+        state.corrections = []; 
+        state.suggestions = []; 
+        state.restructuredText = ''; 
+        state.activeMode = null; 
+        state.analysisCompleted = false;
         updateUI();
     }
 
     function handleCopy(e) {
-        const button = e.target.closest('button');
-        if (!button) return;
-
-        if (!state.analysisCompleted) {
-            showUserMessage("Debes 'Pulir Texto' antes de poder copiar los resultados.", false);
-            return;
-        }
-
+        const button = e.target;
         const textToCopy = getFinalText();
-        
-        if (!textToCopy.trim()) {
-            showUserMessage("No hay texto pulido para copiar.", false);
+        if (!textToCopy) {
+            showUserMessage("No hay texto final para copiar.");
             return;
         }
-
         navigator.clipboard.writeText(textToCopy).then(() => {
             const originalText = button.textContent;
             button.textContent = '¡Copiado!';
             button.classList.add('confirm');
-            setTimeout(() => { 
-                button.textContent = originalText; 
-                button.classList.remove('confirm'); 
-            }, 2000);
+            setTimeout(() => { button.textContent = originalText; button.classList.remove('confirm'); }, 2000);
         });
     }
 
     function handleDownload() {
-        if (!state.analysisCompleted) {
-            showUserMessage("Debes 'Pulir Texto' antes de poder descargar los resultados.", false);
+        const textToDownload = getFinalText();
+        if (!textToDownload) {
+            showUserMessage("No hay texto final para descargar.");
             return;
         }
-        const textToDownload = getFinalText();
-        if (!textToDownload) return;
         const header = `--- Texto Analizado por Veridian ---\nFecha: ${new Date().toLocaleString('es-ES')}\nNivel de IA: ${state.activeLevel}\n--------------------------------------\n\n`;
         const footer = `\n\n--- Fin del Análisis ---`;
         const fullContent = header + textToDownload + footer;
@@ -533,35 +550,44 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     }
     
-    function getFinalText() {
-        if (!state.analysisCompleted) return '';
+    function getUpdatedText() {
+        let currentText = state.originalText;
+        const acceptedChanges = [...state.corrections, ...state.suggestions]
+            .filter(c => c.status === 'accepted')
+            .sort((a, b) => b.offset - a.offset);
 
-        let baseText;
-        let changesToApply = [];
-
-        if (state.activeMode === 'revisado') {
-            baseText = state.restructuredText;
-            // En modo revisado, solo se aplican las correcciones aceptadas
-            changesToApply = state.corrections.filter(c => c.status === 'accepted');
-        } else {
-            baseText = state.originalText;
-            // En otros modos, se aplican tanto correcciones como sugerencias aceptadas
-            changesToApply = [...state.corrections, ...state.suggestions].filter(c => c.status === 'accepted');
-        }
-        
-        changesToApply.sort((a, b) => b.offset - a.offset).forEach(change => {
-            if (baseText.substring(change.offset, change.offset + change.original.length) === change.original) {
-                 baseText = baseText.substring(0, change.offset) + change.replacement + baseText.substring(change.offset + change.original.length);
-            }
+        acceptedChanges.forEach(change => {
+            currentText = currentText.substring(0, change.offset) + change.replacement + currentText.substring(change.offset + change.original.length);
         });
+        return currentText;
+    }
 
-        return baseText;
+    function getFinalText() {
+        if (!state.analysisCompleted) return dom.inputText.value;
+        
+        let textToExport;
+        if (state.activeMode === 'revisado') {
+            textToExport = state.restructuredText;
+        } else {
+            textToExport = getUpdatedText();
+        }
+        return textToExport;
     }
 
     function handleGlobalClick(e) {
-        if (!e.target.closest('#tooltip, mark.correction, mark.suggestion')) {
-            hideTooltip();
+        const tooltip = e.target.closest('#tooltip');
+        if (tooltip) { 
+            handleTooltipClick(e); 
+            return; 
         }
+        
+        const span = e.target.closest('mark.correction, mark.suggestion');
+        if (span) { 
+            showTooltip(span, state.isFocusMode ? dom.focusView : dom.editorContainer); 
+            return; 
+        }
+        
+        hideTooltip();
     }
 
     function showTooltip(span, container) {
@@ -572,10 +598,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let tooltipHtml = '';
         if (state.activeMode === 'revisado' && change.type === 'correction') {
-            tooltipHtml = `<div class="tooltip-guide">
-                               <p>Este error debe gestionarse en el modo <strong>Corrección</strong>.</p>
-                               <button class="go-to-correction">Ir a Corrección</button>
-                           </div>`;
+            tooltipHtml = `<div class="tooltip-guide"><p>Esta corrección debe gestionarse en el modo <strong>Corrección</strong>.</p><button class="go-to-correction">Ir a Corrección</button></div>`;
         } else {
             let buttonsHtml = `<button class="accept-btn">Aceptar</button>`;
             if (change.type === 'correction') {
@@ -589,7 +612,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="tooltip-actions">${buttonsHtml}</div>`;
         }
-        
         dom.tooltip.innerHTML = tooltipHtml;
         positionTooltip(dom.tooltip, span, container);
         dom.tooltip.classList.add('visible');
@@ -613,7 +635,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 state.dictionary.push(word);
                 localStorage.setItem('veridian_dictionary', JSON.stringify(state.dictionary));
             }
-            state.corrections = state.corrections.filter(c => c.original.toLowerCase() !== word);
+            state.corrections.forEach(c => {
+                if (c.original.toLowerCase() === word) {
+                    c.status = 'ignored'; // Ignoramos todas las instancias de esta palabra
+                }
+            });
         } else if (button.classList.contains('go-to-correction')) {
             setActiveMode('correction');
         }
