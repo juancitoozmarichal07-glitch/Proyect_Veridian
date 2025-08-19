@@ -1,1 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Veridian Fusión Final v2.0</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <section id="intro-screen" class="screen">
+        <div class="space-background">
+            <div id="nebula"></div>
+            <div id="stars-far" class="stars"></div>
+            <div id="stars-near" class="stars"></div>
+        </div>
+        <div class="intro-content">
+            <h1>Veridian</h1>
+            <p>El corrector y analizador de textos inteligente</p>
+            <button id="start-button" class="intro-button">Comenzar a Pulir</button>
+        </div>
+    </section>
 
+    <section id="editor-screen" class="screen hidden">
+        <div id="editor-container" class="editor-container">
+            
+            <!-- Panel de Control que se llenará con JS -->
+            <div id="main-control-panel" class="control-panel"></div>
+
+            <div class="top-clear-wrapper">
+                <button id="clear-input-btn" class="clear-btn" title="Borrar texto de entrada">&times;</button>
+            </div>
+            <div class="editor-main-area">
+                <div class="input-wrapper">
+                    <textarea id="input-text" class="input-box" placeholder="Pega aquí el texto para pulir..."></textarea>
+                </div>
+                <div class="intermediate-controls">
+                    <div class="left-controls">
+                        <div id="char-counter" class="char-counter-wrapper">0 caracteres</div>
+                        <div class="output-actions">
+                            <button id="copy-btn" class="action-btn">Copiar Texto</button>
+                            <button id="download-btn" class="action-btn">Descargar .txt</button>
+                        </div>
+                    </div>
+                    <div class="right-controls">
+                        <div id="word-counter" class="word-counter-wrapper">0 / 10000 palabras</div>
+                        <button id="clear-output-btn" class="clear-btn" title="Borrar texto pulido">&times;</button>
+                    </div>
+                </div>
+                <div class="output-wrapper">
+                    <div id="output-text" class="output-box-container">
+                        <p style="color: #666;">Aquí aparecerá tu texto pulido...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="pulir-button-wrapper">
+                <button id="pulir-btn" class="pulir-button">Pulir Texto</button>
+                <p class="disclaimer">💡 La IA es un copiloto, no un piloto automático.</p>
+            </div>
+        </div>
+    </section>
+
+    <div id="focus-view">
+        <div class="focus-header">
+            <h2 id="focus-title" class="focus-title"></h2>
+            <button id="focus-close-btn" class="focus-close-btn">&times;</button>
+        </div>
+        <div id="focus-control-panel" class="control-panel"></div>
+        <div class="focus-controls">
+             <button id="focus-copy-btn" class="action-btn">Copiar Texto</button>
+             <button id="focus-download-btn" class="action-btn">Descargar .txt</button>
+        </div>
+        <div class="focus-content-wrapper">
+            <div id="focus-content" class="focus-content"></div>
+        </div>
+    </div>
+    <div id="tooltip"></div>
+    <div id="help-tooltip"></div>
+
+    <script src="script.js" defer></script>
+</body>
+</html>
