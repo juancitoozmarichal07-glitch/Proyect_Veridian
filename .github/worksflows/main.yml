@@ -1,4 +1,4 @@
-name: Build Veridian (APK DEPURACIÓN - SOLO META)
+name: Build Veridian (APK DEPURACIÓN)
 
 on:
   push:
@@ -25,9 +25,11 @@ jobs:
       - name: 'PASO 3: Instalando Cordova...'
         run: npm install -g cordova
 
-      - name: 'PASO 4: Inyectando CLAVE DE HUGGING FACE...'
-        # Este paso busca la línea vacía en index.html y la reemplaza por tu clave secreta
-        run: sed -i 's|const HUGGING_FACE_API_KEY = "";|const HUGGING_FACE_API_KEY = "${{ secrets.HUGGING_FACE_API_KEY }}";|' www/index.html
+      - name: 'PASO 4: Inyectando Claves API...'
+        # Este paso busca las líneas vacías en script.js y las reemplaza por tus claves secretas
+        run: |
+          sed -i 's|GROQ: "",|GROQ: "${{ secrets.GROQ_API_KEY }}",|' www/script.js
+          sed -i 's|HUGGING_FACE: ""|HUGGING_FACE: "${{ secrets.HUGGING_FACE_API_KEY }}"|' www/script.js
 
       - name: 'PASO 5: Añadiendo la plataforma Android...'
         run: cordova platform add android
@@ -38,6 +40,5 @@ jobs:
       - name: 'PASO 7: Subiendo el APK de Depuración...'
         uses: actions/upload-artifact@v4
         with:
-          name: Veridian-APK-SoloMeta
+          name: Veridian-APK-Depuracion
           path: platforms/android/app/build/outputs/apk/debug/app-debug.apk
-
