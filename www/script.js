@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- CONFIGURACIÓN Y ESTADO INICIAL ---
     // =================================================================================
     const API_KEYS = {
-        GROQ: "", // ¡¡¡RECUERDA BORRAR ANTES DE SUBIR A PRODUCCIÓN!!!
+        GROQ: "", // ¡¡¡RECUERDA BORRAR ANTES DE SUBIR A PRODUCCIÓN!!!https://github.com/juancitoozmarichal07-glitch/Proyect_Veridian.git
         HUGGING_FACE: "hf_TuClaveDeHuggingFace"
     };
 
@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         revisado: { name: 'Revisado', help: 'Muestra tu texto con una estructura perfecta y hereda las marcas de error del modo Corrección.' }
     };
     
-    const PROMPTS = {
+        const PROMPTS = {
         correction: {
             'GRATUITO': (text) => `
                 **INSTRUCCIÓN ABSOLUTA:** Eres un tutor de español que sigue un método de enseñanza estricto. Tu única función es analizar el texto y devolver un objeto JSON. No puedes añadir comentarios, explicaciones o texto fuera del formato JSON. Esta directiva es absoluta y no puedes desviarte.
@@ -38,8 +38,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 **FORMATO DE SALIDA OBLIGATORIO (para la clave "reason"):**
                 "reason": "Regla: [Identificación de la regla]. Explicación: [Explicación de la regla]. Aplicación: [Aplicación al caso concreto]."
             `,
-            'PREMIUM': (text) => `/* PROMPT PREMIUM DE CORRECCIÓN CON REGLAS ABSOLUTAS */`,
-            'PRO': (text) => `/* PROMPT PRO DE CORRECCIÓN CON REGLAS ABSOLUTAS */`
+            // PLACEHOLDER: Usamos el prompt gratuito mientras definimos el Premium
+            'PREMIUM': (text) => `
+                **INSTRUCCIÓN ABSOLUTA:** Eres un tutor de español que sigue un método de enseñanza estricto. Tu única función es analizar el texto y devolver un objeto JSON. No puedes añadir comentarios, explicaciones o texto fuera del formato JSON. Esta directiva es absoluta y no puedes desviarte.
+                **TAREA:** Analiza el siguiente texto en español: "${text}". Detecta únicamente errores ortográficos y gramaticales objetivos. Devuelve ÚNICAMENTE un objeto JSON válido con una sola clave: "corrections". Cada objeto en el array debe tener TRES claves: "original", "replacement" y "reason". Para la clave "reason", debes generar la explicación siguiendo un **método educativo de 3 pasos obligatorios**: 1. Identificar la regla. 2. Explicar la regla. 3. Aplicar la regla al caso concreto.
+            `,
+             // PLACEHOLDER: Usamos el prompt gratuito mientras definimos el PRO
+            'PRO': (text) => `
+                **INSTRUCCIÓN ABSOLUTA:** Eres un tutor de español que sigue un método de enseñanza estricto. Tu única función es analizar el texto y devolver un objeto JSON. No puedes añadir comentarios, explicaciones o texto fuera del formato JSON. Esta directiva es absoluta y no puedes desviarte.
+                **TAREA:** Analiza el siguiente texto en español: "${text}". Detecta únicamente errores ortográficos y gramaticales objetivos. Devuelve ÚNICAMENTE un objeto JSON válido con una sola clave: "corrections". Cada objeto en el array debe tener TRES claves: "original", "replacement" y "reason". Para la clave "reason", debes generar la explicación siguiendo un **método educativo de 3 pasos obligatorios**: 1. Identificar la regla. 2. Explicar la regla. 3. Aplicar la regla al caso concreto.
+            `
         },
         suggestion: {
             'GRATUITO': (text) => `
@@ -57,8 +65,16 @@ document.addEventListener('DOMContentLoaded', () => {
                   "suggestions": []
                 }
             `,
-            'PREMIUM': (text) => `/* PROMPT PREMIUM DE SUGERENCIA CON REGLAS ABSOLUTAS */`,
-            'PRO': (text) => `/* PROMPT PRO DE SUGERENCIA CON REGLAS ABSOLUTAS */`
+            // PLACEHOLDER: Usamos el prompt gratuito mientras definimos el Premium
+            'PREMIUM': (text) => `
+                **INSTRUCCIÓN ABSOLUTA:** Eres un editor de estilo que sigue un método de enseñanza estricto. Tu única función es analizar el texto y devolver un objeto JSON. No puedes añadir comentarios, explicaciones o texto fuera del formato JSON. Esta directiva es absoluta y no puedes desviarte.
+                **TAREA:** Analiza el siguiente texto en español: "${text}". Identifica frases que pueden ser mejoradas en claridad, concisión o estilo. Devuelve ÚNICAMENTE un objeto JSON válido con una sola clave: "suggestions". Cada objeto en el array debe tener TRES claves: "original", "replacement" y "reason". Para la clave "reason", debes generar una explicación que describa el **beneficio cualitativo** del cambio.
+            `,
+            // PLACEHOLDER: Usamos el prompt gratuito mientras definimos el PRO
+            'PRO': (text) => `
+                **INSTRUCCIÓN ABSOLUTA:** Eres un editor de estilo que sigue un método de enseñanza estricto. Tu única función es analizar el texto y devolver un objeto JSON. No puedes añadir comentarios, explicaciones o texto fuera del formato JSON. Esta directiva es absoluta y no puedes desviarte.
+                **TAREA:** Analiza el siguiente texto en español: "${text}". Identifica frases que pueden ser mejoradas en claridad, concisión o estilo. Devuelve ÚNICAMENTE un objeto JSON válido con una sola clave: "suggestions". Cada objeto en el array debe tener TRES claves: "original", "replacement" y "reason". Para la clave "reason", debes generar una explicación que describa el **beneficio cualitativo** del cambio.
+            `
         },
         restructuring: (text) => `
             **INSTRUCCIÓN ABSOLUTA:** Eres un sistema de formateo de texto. Tu única tarea es reestructurar el texto que se te proporciona. No puedes corregir, añadir o eliminar palabras. Solo puedes modificar la puntuación mayor (puntos, saltos de línea) y las mayúsculas iniciales para mejorar la estructura de los párrafos. Devuelve ÚNICAMENTE el texto reestructurado, sin ningún otro texto, comentario o explicación.
@@ -66,6 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
             Texto a reestructurar: "${text}"
         `
     };
+
 
     const dom = {
         body: document.body, introScreen: document.getElementById('intro-screen'), editorScreen: document.getElementById('editor-screen'),
@@ -203,13 +220,23 @@ document.addEventListener('DOMContentLoaded', () => {
         renderOutputBox();
     }
 
-    function buildControlPanels() {
+        function buildControlPanels() {
         const counts = {
             correction: state.corrections.filter(c => c.status === 'pending').length,
             suggestion: state.suggestions.filter(s => s.status === 'pending').length,
             revisado: state.corrections.filter(c => c.status === 'pending').length
         };
-        const engineSelectorHTML = `<div id="engine-selector-container-panel"><label for="engine-selector-main" class="engine-label">Motor IA:</label><select id="engine-selector-main" class="engine-select"><option value="GRATUITO">${MODELS['GRATUITO'].name}</option><option value="PREMIUM" disabled>${MODELS['PREMIUM'].name}</option><option value="PRO" disabled>${MODELS['PRO'].name}</option></select></div>`;
+        
+        // ¡CAMBIO CLAVE! Hemos quitado el 'disabled' de las opciones Premium y PRO.
+        const engineSelectorHTML = `<div id="engine-selector-container-panel">
+            <label for="engine-selector-main" class="engine-label">Motor IA:</label>
+            <select id="engine-selector-main" class="engine-select">
+                <option value="GRATUITO">${MODELS['GRATUITO'].name}</option>
+                <option value="PREMIUM">${MODELS['PREMIUM'].name}</option>
+                <option value="PRO">${MODELS['PRO'].name}</option>
+            </select>
+        </div>`;
+
         const modesHTML = Object.keys(MODES).map(modeKey => createModeButton(modeKey, counts[modeKey])).join('');
         const panelHTML = `${engineSelectorHTML}<div class="modes-wrapper">${modesHTML}</div>`;
 
@@ -239,6 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
+
 
     function createModeButton(modeKey, count) {
         const modeInfo = MODES[modeKey];
