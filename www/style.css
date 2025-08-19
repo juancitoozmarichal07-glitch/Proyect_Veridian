@@ -160,3 +160,80 @@ body.focus-mode #focus-view { transform: scale(1); opacity: 1; visibility: visib
 .tooltip-guide button { background-color: var(--blue-accent); }
 #help-tooltip { position: fixed; z-index: 1001; background-color: #333; color: #fff; padding: 10px 15px; border-radius: 8px; border: 1px solid #555; max-width: 250px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); visibility: hidden; opacity: 0; transition: opacity 0.2s; font-size: 14px; line-height: 1.5; }
 #help-tooltip.visible { visibility: visible; opacity: 1; }
+/* --- AJUSTES PARA EL PANEL DE CONTROL UNIFICADO --- */
+
+/* Convierte el panel principal en un contenedor flexible vertical */
+.control-panel {
+    display: flex;
+    flex-direction: column; /* Apila los elementos verticalmente */
+    gap: 15px; /* Espacio entre el selector y los botones */
+    padding: 15px; /* Mantiene el padding original */
+}
+
+/* Contenedor para el selector de motor */
+#engine-selector-container-panel {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Contenedor para los botones de modo */
+.modes-wrapper {
+    display: flex;
+    justify-content: space-around; /* Mantiene los botones espaciados */
+    width: 100%;
+}
+
+/* Estilos para la etiqueta y el selector (si no los tienes ya) */
+.engine-label {
+    font-size: 12px;
+    color: var(--text-off-color);
+    font-weight: bold;
+}
+
+.engine-select {
+    background-color: var(--box-bg);
+    color: var(--text-color);
+    border: 1px solid var(--box-border);
+    border-radius: 6px;
+    padding: 5px;
+    font-size: 12px;
+    font-weight: bold;
+}
+/* --- ESTILOS PARA EL PANEL DE CONTROL UNIFICADO --- */
+
+.control-panel {
+    flex-direction: column; /* Apila los elementos verticalmente */
+    gap: 15px; /* Crea un espacio entre el selector y los botones */
+}
+
+#engine-selector-container-panel {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.modes-wrapper {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+}
+
+.engine-label {
+    font-size: 12px;
+    color: var(--text-off-color);
+    font-weight: bold;
+}
+
+.engine-select {
+    background-color: var(--box-bg);
+    color: var(--text-color);
+    border: 1px solid var(--box-border);
+    border-radius: 6px;
+    padding: 5px;
+    font-size: 12px;
+    font-weight: bold;
+}
