@@ -1,112 +1,48 @@
-/* --- ESTILOS COMPLETOS DE LA VERSIÓN ESTÉTICA (TRASPLANTE) --- */
+/* --- VARIABLES Y ESTILOS GENERALES --- */
 :root {
-    --bg-color: #0D1117;
-    --text-color: #E0E0E0;
-    --box-bg: rgba(22, 27, 34, 0.8);
-    --box-border: rgba(138, 158, 178, 0.2);
-    --panel-bg: rgba(22, 27, 34, 0.7);
-    --glow-color: #00f2ea;
-    --glow-color-dark: #00a99d;
-    --green-accent: #28a745;
-    --yellow-accent: #e6c300;
-    --blue-accent: #3498db;
-    --red-accent: #f85149;
-    --led-active-color: #32ff7e;
-    --text-off-color: #888;
-    --app-height: 100vh;
+    --bg-color: #0D1117; --text-color: #E0E0E0; --box-bg: rgba(22, 27, 34, 0.8);
+    --box-border: rgba(138, 158, 178, 0.2); --panel-bg: rgba(22, 27, 34, 0.7);
+    --glow-color: #00f2ea; --glow-color-dark: #00a99d; --green-accent: #28a745;
+    --yellow-accent: #e6c300; --blue-accent: #3498db; --red-accent: #f85149;
+    --led-active-color: #32ff7e; --text-off-color: #888; --app-height: 100vh;
 }
-html, body {
-    margin: 0; padding: 0; width: 100%;
-    background-color: var(--bg-color);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    overflow: hidden; color: var(--text-color);
-    height: var(--app-height);
-}
-.screen {
-    width: 100%; height: 100%; display: flex; flex-direction: column;
-    justify-content: center; align-items: center; position: absolute;
-    top: 0; left: 0; transition: opacity 0.5s ease-in-out, visibility 0.5s;
-    z-index: 10;
-}
+html, body { margin: 0; padding: 0; width: 100%; background-color: var(--bg-color); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; overflow: hidden; color: var(--text-color); height: var(--app-height); }
+.screen { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; position: absolute; top: 0; left: 0; transition: opacity 0.5s ease-in-out, visibility 0.5s; z-index: 10; }
 .hidden { opacity: 0; visibility: hidden; pointer-events: none; z-index: -1; }
+
+/* --- PANTALLA DE INICIO --- */
 .space-background { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
 #nebula { width: 100%; height: 100%; background: radial-gradient(ellipse at 70% 30%, rgba(80, 100, 150, 0.15), transparent 50%); }
 @keyframes move-background { from { background-position: 0 0; } to { background-position: 1000px 1000px; } }
 .stars { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-repeat: repeat; animation: move-background linear infinite; }
-#stars-far { animation-duration: 200s; }
-#stars-near { animation-duration: 80s; }
+#stars-far { animation-duration: 200s; } #stars-near { animation-duration: 80s; }
 .intro-content { text-align: center; z-index: 10; }
-.intro-content h1 {
-    font-size: 3.5rem; margin-bottom: 0;
-    color: var(--glow-color);
-    animation: pulse-glow 2.5s ease-in-out infinite alternate;
-}
+.intro-content h1 { font-size: 3.5rem; margin-bottom: 0; color: var(--glow-color); animation: pulse-glow 2.5s ease-in-out infinite alternate; }
 .intro-content p { font-size: 1.2rem; color: #8a9eb2; margin-top: 10px; }
-.intro-button {
-    margin-top: 40px; padding: 18px 40px; font-size: 1.1rem; font-weight: bold; color: #FFFFFF;
-    background: linear-gradient(90deg, var(--glow-color), var(--glow-color-dark)); border: none;
-    border-radius: 50px; cursor: pointer; box-shadow: 0 0 25px rgba(0, 229, 209, 0.5); transition: all 0.3s ease;
-}
+.intro-button { margin-top: 40px; padding: 18px 40px; font-size: 1.1rem; font-weight: bold; color: #FFFFFF; background: linear-gradient(90deg, var(--glow-color), var(--glow-color-dark)); border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 0 25px rgba(0, 229, 209, 0.5); transition: all 0.3s ease; }
 .intro-button:hover { transform: scale(1.05); box-shadow: 0 0 35px rgba(0, 229, 209, 0.8); }
-@keyframes pulse-glow {
-    from { text-shadow: 0 0 10px var(--glow-color-dark), 0 0 20px var(--glow-color-dark), 0 0 30px var(--glow-color-dark); }
-    to { text-shadow: 0 0 20px var(--glow-color), 0 0 30px var(--glow-color), 0 0 40px var(--glow-color); }
-}
-.editor-container {
-    width: 100%; height: 100%; display: flex; flex-direction: column;
-    box-sizing: border-box; padding: 15px; gap: 5px;
-}
-/* Panel de Control modificado para ser un contenedor flex vertical */
-.control-panel { 
-    display: flex; 
-    flex-direction: column; /* Apila los elementos verticalmente */
-    gap: 15px; /* Espacio entre el selector y los botones */
-    border: 1px solid var(--box-border); 
-    background: var(--panel-bg); 
-    backdrop-filter: blur(8px); 
-    border-radius: 12px; 
-    padding: 15px; 
-    flex-shrink: 0; 
-}
-/* Contenedor para los botones de modo */
-.mode-buttons-container {
-    display: flex;
-    justify-content: space-around;
-    width: 100%;
-}
-.mode-control { display: flex; flex-direction: column; align-items: center; gap: 8px; user-select: none; }
-.mode-label-wrapper { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+@keyframes pulse-glow { from { text-shadow: 0 0 10px var(--glow-color-dark), 0 0 20px var(--glow-color-dark), 0 0 30px var(--glow-color-dark); } to { text-shadow: 0 0 20px var(--glow-color), 0 0 30px var(--glow-color), 0 0 40px var(--glow-color); } }
+
+/* --- PANTALLA DEL EDITOR --- */
+.editor-container { width: 100%; height: 100%; display: flex; flex-direction: column; box-sizing: border-box; padding: 15px; gap: 5px; }
+.control-panel { display: flex; flex-direction: column; gap: 15px; border: 1px solid var(--box-border); background: var(--panel-bg); backdrop-filter: blur(8px); border-radius: 12px; padding: 15px; flex-shrink: 0; }
+#engine-selector-container-panel { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.engine-label { font-size: 14px; color: var(--text-off-color); font-weight: bold; }
+.engine-select { background-color: var(--box-bg); color: var(--text-color); border: 1px solid var(--box-border); border-radius: 6px; padding: 8px; font-size: 14px; }
+.modes-wrapper { display: flex; justify-content: space-around; width: 100%; }
+.mode-control { display: flex; flex-direction: column; align-items: center; gap: 8px; user-select: none; cursor: pointer; }
+.mode-label-wrapper { display: flex; align-items: center; gap: 5px; }
 .mode-control .label { font-size: 12px; color: var(--text-off-color); font-weight: bold; transition: color 0.3s ease; max-width: 80px; text-align: center; }
 .mode-control.active .label { color: #FFFFFF; }
 .mode-help-btn { font-size: 10px; color: var(--text-off-color); border: 1px solid var(--text-off-color); border-radius: 50%; width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; cursor: help; transition: all 0.2s; }
 .mode-help-btn:hover { background: var(--text-off-color); color: var(--bg-color); }
-.mode-button-wrapper { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.mode-button-wrapper { display: flex; align-items: center; gap: 8px; }
 .mode-btn-circle { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #888; background-color: #222; position: relative; transition: border-color 0.3s ease; }
 .mode-control.active .mode-btn-circle { border-color: var(--led-active-color); }
 .mode-btn-circle::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); width: 10px; height: 10px; border-radius: 50%; background-color: var(--led-active-color); box-shadow: 0 0 10px var(--led-active-color); transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
 .mode-control.active .mode-btn-circle::after { transform: translate(-50%, -50%) scale(1); }
 .mode-control .count { background-color: #333; color: #aaa; border-radius: 10px; padding: 1px 8px; font-size: 12px; font-weight: bold; transition: all 0.3s ease; }
 .mode-control.active .count { background-color: #f0f0f0; color: #000; }
-/* Estilos para el contenedor del selector de motor */
-.engine-selector-container {
-    width: 100%;
-    text-align: center;
-    border-bottom: 1px solid var(--box-border); /* Línea divisoria */
-    padding-bottom: 15px; /* Espacio inferior */
-}
-.engine-selector-container label {
-    font-size: 12px;
-    color: var(--text-off-color);
-    margin-right: 10px;
-}
-.engine-selector-container select {
-    background-color: var(--box-bg);
-    color: var(--text-color);
-    border: 1px solid var(--box-border);
-    border-radius: 6px;
-    padding: 8px 12px;
-    font-size: 14px;
-}
 .top-clear-wrapper { display: flex; justify-content: flex-end; padding: 0 5px 5px 5px; }
 .clear-btn { background: none; border: none; color: var(--text-off-color); font-size: 24px; cursor: pointer; transition: color 0.2s; line-height: 1; padding: 0 5px; }
 .clear-btn:hover { color: var(--text-color); }
@@ -133,7 +69,9 @@ html, body {
 .output-status { color: #888; text-align: center; padding-top: 20px; }
 .output-status-main { font-size: 16px; }
 .output-status-sub { font-size: 12px; margin-top: 8px; color: #666; }
-.disclaimer { font-size: 12px; color: var(--text-off-color); text-align: center; max-width: 80%; }
+.disclaimer { font-size: 12px; color: var(--text-off-color); text-align: center; }
+
+/* --- MODO ENFOQUE --- */
 #focus-view { position: fixed; top: 0; left: 0; width: 100%; z-index: 100; background-color: var(--bg-color); display: flex; flex-direction: column; padding: 15px; box-sizing: border-box; transform: scale(1.1); opacity: 0; visibility: hidden; transition: transform 0.3s ease, opacity 0.3s, visibility 0.3s; height: var(--app-height); }
 body.focus-mode #focus-view { transform: scale(1); opacity: 1; visibility: visible; }
 .focus-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-shrink: 0; }
@@ -143,8 +81,34 @@ body.focus-mode #focus-view { transform: scale(1); opacity: 1; visibility: visib
 .focus-controls { padding: 5px 0 10px 0; display: flex; justify-content: flex-start; gap: 15px; }
 .focus-content-wrapper { flex-grow: 1; min-height: 0; position: relative; }
 .focus-content { width: 100%; height: 100%; background-color: var(--box-bg); border: 1px solid var(--box-border); border-radius: 12px; padding: 20px; box-sizing: border-box; overflow-y: auto; line-height: 1.7; font-size: 18px; transition: opacity 0.2s ease-in-out; }
-.correction { border-bottom: 2px solid var(--green-accent); cursor: pointer; }
-.suggestion { border-bottom: 2px solid var(--yellow-accent); cursor: pointer; }
+
+/* --- MARCAS Y BOCADILLOS (TOOLTIPS) --- */
+/* --- MARCAS Y BOCADILLOS (TOOLTIPS) --- */
+mark.correction, mark.suggestion {
+    background-color: transparent;
+    color: inherit;
+    /* Cambio clave para mejorar el renderizado en frases largas */
+    display: inline; 
+    border-bottom-style: dotted;
+    border-bottom-width: 2px;
+    padding-bottom: 1px;
+    cursor: pointer;
+    /* Añadimos una pequeña sombra de texto para que el borde no se superponga */
+    text-shadow: 0 1px 0 var(--bg-color), 0 -1px 0 var(--bg-color), 1px 0 0 var(--bg-color), -1px 0 0 var(--bg-color);
+}
+mark.correction {
+    border-bottom-color: var(--green-accent);
+}
+mark.suggestion {
+    border-bottom-color: var(--yellow-accent);
+}
+
+mark.correction {
+    border-bottom-color: var(--green-accent);
+}
+mark.suggestion {
+    border-bottom-color: var(--yellow-accent);
+}
 #tooltip { position: fixed; z-index: 1000; background-color: #2a2a2a; color: #fff; padding: 15px; border-radius: 8px; border: 1px solid #444; width: max-content; max-width: 300px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); visibility: hidden; opacity: 0; transition: opacity 0.2s; }
 #tooltip.visible { visibility: visible; opacity: 1; }
 .tooltip-content .original { text-decoration: line-through; color: #ff8a8a; }
@@ -153,87 +117,9 @@ body.focus-mode #focus-view { transform: scale(1); opacity: 1; visibility: visib
 .tooltip-actions { margin-top: 15px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
 .tooltip-actions button { padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: #fff; }
 .tooltip-actions .accept-btn { background-color: var(--green-accent); }
-.tooltip-actions .dict-btn { background-color: var(--blue-accent); }
 .tooltip-actions .ignore-btn { background-color: var(--red-accent); }
 .tooltip-guide { text-align: center; }
 .tooltip-guide p { margin: 0 0 10px 0; color: #a0e8ff; }
-.tooltip-guide button { background-color: var(--blue-accent); }
+.tooltip-guide button { background-color: var(--blue-accent); padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: #fff; }
 #help-tooltip { position: fixed; z-index: 1001; background-color: #333; color: #fff; padding: 10px 15px; border-radius: 8px; border: 1px solid #555; max-width: 250px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); visibility: hidden; opacity: 0; transition: opacity 0.2s; font-size: 14px; line-height: 1.5; }
 #help-tooltip.visible { visibility: visible; opacity: 1; }
-/* --- AJUSTES PARA EL PANEL DE CONTROL UNIFICADO --- */
-
-/* Convierte el panel principal en un contenedor flexible vertical */
-.control-panel {
-    display: flex;
-    flex-direction: column; /* Apila los elementos verticalmente */
-    gap: 15px; /* Espacio entre el selector y los botones */
-    padding: 15px; /* Mantiene el padding original */
-}
-
-/* Contenedor para el selector de motor */
-#engine-selector-container-panel {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-}
-
-/* Contenedor para los botones de modo */
-.modes-wrapper {
-    display: flex;
-    justify-content: space-around; /* Mantiene los botones espaciados */
-    width: 100%;
-}
-
-/* Estilos para la etiqueta y el selector (si no los tienes ya) */
-.engine-label {
-    font-size: 12px;
-    color: var(--text-off-color);
-    font-weight: bold;
-}
-
-.engine-select {
-    background-color: var(--box-bg);
-    color: var(--text-color);
-    border: 1px solid var(--box-border);
-    border-radius: 6px;
-    padding: 5px;
-    font-size: 12px;
-    font-weight: bold;
-}
-/* --- ESTILOS PARA EL PANEL DE CONTROL UNIFICADO --- */
-
-.control-panel {
-    flex-direction: column; /* Apila los elementos verticalmente */
-    gap: 15px; /* Crea un espacio entre el selector y los botones */
-}
-
-#engine-selector-container-panel {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-}
-
-.modes-wrapper {
-    display: flex;
-    justify-content: space-around;
-    width: 100%;
-}
-
-.engine-label {
-    font-size: 12px;
-    color: var(--text-off-color);
-    font-weight: bold;
-}
-
-.engine-select {
-    background-color: var(--box-bg);
-    color: var(--text-color);
-    border: 1px solid var(--box-border);
-    border-radius: 6px;
-    padding: 5px;
-    font-size: 12px;
-    font-weight: bold;
-}

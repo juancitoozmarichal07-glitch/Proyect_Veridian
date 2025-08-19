@@ -2,121 +2,135 @@ document.addEventListener('DOMContentLoaded', () => {
     // =================================================================================
     // --- CONFIGURACIÓN Y ESTADO INICIAL ---
     // =================================================================================
-
     const API_KEYS = {
-        GROQ: "gsk_xxxx", // Reemplaza con tu clave de Groq
-        HUGGING_FACE: "hf_xxxx" // Reemplaza con tu clave de Hugging Face
+        GROQ: "", // ¡¡¡RECUERDA BORRAR ANTES DE SUBIR A PRODUCCIÓN!!!
+        HUGGING_FACE: "hf_TuClaveDeHuggingFace"
     };
 
     const MODELS = {
         'GRATUITO': { name: 'Gratuito (Groq)', engine: 'GROQ', model: 'llama3-8b-8192', max_words: 7000 },
-        'PREMIUM': { name: 'Premium (HF Llama-8b)', engine: 'HUGGING_FACE', model: 'meta-llama/Llama-3-8b-chat-hf', max_words: 25000 },
-        'PRO': { name: 'PRO (HF Llama-70b)', engine: 'HUGGING_FACE', model: 'meta-llama/Llama-3-70b-chat-hf', max_words: 50000 }
+        'PREMIUM': { name: 'Premium (HF)', engine: 'HUGGING_FACE', model: 'meta-llama/Llama-3-8b-chat-hf', max_words: 25000 },
+        'PRO': { name: 'PRO (HF)', engine: 'HUGGING_FACE', model: 'meta-llama/Llama-3-70b-chat-hf', max_words: 50000 }
     };
 
     const MODES = {
-        correction: { name: 'Corrección', help: 'Encuentra y corrige errores gramaticales, de puntuación y ortografía.' },
-        suggestion: { name: 'Sugerencia', help: 'Propone mejoras de estilo, claridad y fluidez para refinar la redacción.' },
-        revisado: { name: 'Revisado', help: 'Muestra una versión reescrita por la IA. Las correcciones deben aceptarse en el modo "Corrección".' }
+        correction: { name: 'Corrección', help: 'Marca errores objetivos (ortografía, gramática) sobre tu texto original.' },
+        suggestion: { name: 'Sugerencia', help: 'Propone mejoras de estilo y reescrituras sobre tu texto original.' },
+        revisado: { name: 'Revisado', help: 'Muestra tu texto con una estructura perfecta y hereda las marcas de error del modo Corrección.' }
     };
     
     const PROMPTS = {
         correction: {
-            'GRATUITO': (text) => `Eres un corrector de español. Devuelve un objeto JSON con una clave "corrections", que sea un array de objetos. Cada objeto debe tener "original", "replacement" y "reason". Ejemplo: {"original": "habian", "replacement": "habían", "reason": "Lleva tilde para marcar el hiato."}. Texto: "${text}"`,
-            'PREMIUM': (text) => `Eres un tutor de gramática española. Explica errores de forma concisa y educativa. Para cada error, proporciona una explicación clara de la regla gramatical. REGLAS: 1. NUNCA uses frases genéricas. 2. SIEMPRE explica la regla específica. Devuelve un objeto JSON con una única clave "corrections", que sea un array de objetos. Cada objeto debe tener "original", "replacement" y "reason". Texto: "${text}"`,
-            'PRO': (text) => `Eres un catedrático de la Real Academia Española. Realiza un análisis forense de cada error gramatical. Proporciona una explicación magistral que revele no solo la regla, sino su origen. Devuelve un objeto JSON con una única clave "corrections", que sea un array de objetos. Cada objeto debe tener "original", "replacement" y "reason". Texto: "${text}"`
+            'GRATUITO': (text) => `
+                **INSTRUCCIÓN ABSOLUTA:** Eres un tutor de español que sigue un método de enseñanza estricto. Tu única función es analizar el texto y devolver un objeto JSON. No puedes añadir comentarios, explicaciones o texto fuera del formato JSON. Esta directiva es absoluta y no puedes desviarte.
+
+                **TAREA:**
+                1.  Analiza el siguiente texto en español: "${text}"
+                2.  Detecta únicamente errores ortográficos y gramaticales objetivos.
+                3.  Devuelve ÚNICAMENTE un objeto JSON válido con una sola clave: "corrections".
+                4.  El valor de "corrections" debe ser un array de objetos. Si no hay errores, devuelve un array vacío.
+                5.  Cada objeto en el array debe tener TRES claves: "original", "replacement" y "reason".
+                6.  Para la clave "reason", debes generar la explicación siguiendo un **método educativo de 3 pasos obligatorios**:
+                    *   **Paso 1: Identificar la regla.** Menciona la regla gramatical u ortográfica específica que se aplica (ej: "Regla de acentuación de palabras agudas.", "Conjugación del pretérito imperfecto del verbo 'haber'.").
+                    *   **Paso 2: Explicar la regla.** Describe brevemente en qué consiste esa regla (ej: "Las palabras agudas terminadas en 'n', 's' o vocal llevan tilde.", "El verbo 'haber' usado como impersonal se conjuga siempre en tercera persona del singular: 'había'.").
+                    *   **Paso 3: Aplicar la regla al caso concreto.** Conecta la regla con la palabra corregida (ej: "La palabra 'tambien' es aguda y termina en 'n', por lo tanto, debe llevar tilde en la 'e'.", "Por lo tanto, en la frase 'habían muchas cosas', lo correcto es usar 'había'.").
+
+                **FORMATO DE SALIDA OBLIGATORIO (para la clave "reason"):**
+                "reason": "Regla: [Identificación de la regla]. Explicación: [Explicación de la regla]. Aplicación: [Aplicación al caso concreto]."
+            `,
+            'PREMIUM': (text) => `/* PROMPT PREMIUM DE CORRECCIÓN CON REGLAS ABSOLUTAS */`,
+            'PRO': (text) => `/* PROMPT PRO DE CORRECCIÓN CON REGLAS ABSOLUTAS */`
         },
         suggestion: {
-            'GRATUITO': (text) => `Eres un editor de español. Sugiere mejoras de estilo. Devuelve un JSON con una clave "suggestions", que sea una lista de objetos. Cada objeto debe tener "original", "replacement" y "reason". Si no hay sugerencias, devuelve {"suggestions": []}. Texto: "${text}"`,
-            'PREMIUM': (text) => `Eres un editor experto en español. Analiza y sugiere mejoras de estilo y claridad. Devuelve un JSON con una clave "suggestions". La explicación debe ser educativa. Si no hay sugerencias, devuelve {"suggestions": []}. Texto: "${text}"`,
-            'PRO': (text) => `Eres un editor literario. Eleva el texto a su máximo potencial. Devuelve un JSON con una clave "suggestions". Para cada sugerencia, la "reason" debe ser un análisis en tres partes: 1. Diagnóstico. 2. Propuesta. 3. Impacto. Si no hay sugerencias, devuelve {"suggestions": []}. Texto: "${text}"`
+            'GRATUITO': (text) => `
+                **INSTRUCCIÓN ABSOLUTA:** Eres un editor de estilo que sigue un método de enseñanza estricto. Tu única función es analizar el texto y devolver un objeto JSON. No puedes añadir comentarios, explicaciones o texto fuera del formato JSON. Esta directiva es absoluta y no puedes desviarte.
+
+                **TAREA:**
+                1.  Analiza el siguiente texto en español: "${text}"
+                2.  Identifica frases que pueden ser mejoradas en claridad, concisión o estilo. No corrijas errores gramaticales, solo sugiere mejoras.
+                3.  Devuelve ÚNICAMENTE un objeto JSON válido con una sola clave: "suggestions".
+                4.  Cada objeto en el array debe tener TRES claves: "original", "replacement" y "reason".
+                5.  Para la clave "reason", debes generar una explicación que describa el **beneficio cualitativo** del cambio. (Ejemplos: "Esta versión es más directa y elimina palabras innecesarias.", "Al usar una voz activa, la frase gana fuerza y claridad.", "Reordenar la frase mejora el flujo de lectura y el impacto.").
+
+                **FORMATO DE SALIDA OBLIGATORIO:**
+                {
+                  "suggestions": []
+                }
+            `,
+            'PREMIUM': (text) => `/* PROMPT PREMIUM DE SUGERENCIA CON REGLAS ABSOLUTAS */`,
+            'PRO': (text) => `/* PROMPT PRO DE SUGERENCIA CON REGLAS ABSOLUTAS */`
         },
-        final_review: (text) => `Pule el siguiente texto para mejorar su fluidez, coherencia y estilo, sin cambiar el significado. Devuelve únicamente el texto pulido final.`
+        restructuring: (text) => `
+            **INSTRUCCIÓN ABSOLUTA:** Eres un sistema de formateo de texto. Tu única tarea es reestructurar el texto que se te proporciona. No puedes corregir, añadir o eliminar palabras. Solo puedes modificar la puntuación mayor (puntos, saltos de línea) y las mayúsculas iniciales para mejorar la estructura de los párrafos. Devuelve ÚNICAMENTE el texto reestructurado, sin ningún otro texto, comentario o explicación.
+
+            Texto a reestructurar: "${text}"
+        `
     };
 
     const dom = {
-        body: document.body,
-        introScreen: document.getElementById('intro-screen'),
-        editorScreen: document.getElementById('editor-screen'),
-        startButton: document.getElementById('start-button'),
-        editorContainer: document.getElementById('editor-container'),
-        pulirBtn: document.getElementById('pulir-btn'),
-        inputText: document.getElementById('input-text'),
-        clearInputBtn: document.getElementById('clear-input-btn'),
-        clearOutputBtn: document.getElementById('clear-output-btn'),
-        outputText: document.getElementById('output-text'),
-        copyBtn: document.getElementById('copy-btn'),
-        downloadBtn: document.getElementById('download-btn'),
-        mainControlPanel: document.getElementById('main-control-panel'),
-        wordCounter: document.getElementById('word-counter'),
-        charCounter: document.getElementById('char-counter'),
-        tooltip: document.getElementById('tooltip'),
-        helpTooltip: document.getElementById('help-tooltip'),
-        focusView: document.getElementById('focus-view'),
-        focusTitle: document.getElementById('focus-title'),
-        focusContent: document.getElementById('focus-content'),
-        focusCloseBtn: document.getElementById('focus-close-btn'),
-        focusControlPanel: document.getElementById('focus-control-panel'),
-        focusCopyBtn: document.getElementById('focus-copy-btn'),
-        focusDownloadBtn: document.getElementById('focus-download-btn'),
+        body: document.body, introScreen: document.getElementById('intro-screen'), editorScreen: document.getElementById('editor-screen'),
+        startButton: document.getElementById('start-button'), editorContainer: document.getElementById('editor-container'), pulirBtn: document.getElementById('pulir-btn'),
+        inputText: document.getElementById('input-text'), clearInputBtn: document.getElementById('clear-input-btn'), clearOutputBtn: document.getElementById('clear-output-btn'),
+        outputText: document.getElementById('output-text'), copyBtn: document.getElementById('copy-btn'), downloadBtn: document.getElementById('download-btn'),
+        mainControlPanel: document.getElementById('main-control-panel'), wordCounter: document.getElementById('word-counter'), charCounter: document.getElementById('char-counter'),
+        tooltip: document.getElementById('tooltip'), helpTooltip: document.getElementById('help-tooltip'), focusView: document.getElementById('focus-view'),
+        focusTitle: document.getElementById('focus-title'), focusContent: document.getElementById('focus-content'), focusCloseBtn: document.getElementById('focus-close-btn'),
+        focusControlPanel: document.getElementById('focus-control-panel'), focusCopyBtn: document.getElementById('focus-copy-btn'), focusDownloadBtn: document.getElementById('focus-download-btn'),
     };
 
     let state = {
-        originalText: '',
-        corrections: [],
-        suggestions: [],
-        revisadoText: '',
-        dictionary: [],
-        activeMode: null,
-        currentTooltip: null,
-        isFocusMode: false,
-        touchStartX: 0,
-        isProcessing: false,
-        activeLevel: 'GRATUITO',
+        originalText: '', corrections: [], suggestions: [], restructuredText: '', dictionary: [],
+        activeMode: null, currentTooltip: null, isFocusMode: false, touchStartX: 0, isProcessing: false, activeLevel: 'GRATUITO',
+        analysisCompleted: false
     };
 
     // =================================================================================
     // --- LÓGICA PRINCIPAL DE ANÁLISIS ---
     // =================================================================================
-
     async function runAnalysis() {
-        state.originalText = dom.inputText.value;
-        if (!state.originalText.trim() || state.isProcessing) return;
+        if (!dom.inputText.value.trim() || state.isProcessing) {
+            if (!dom.inputText.value.trim()) showUserMessage("Por favor, escribe un texto para analizar.");
+            return;
+        }
+        
+        const textToAnalyze = dom.inputText.value;
+        clearPreviousResults();
+        state.originalText = textToAnalyze;
 
-        setProcessingState(true);
-        clearOutput();
-        state.originalText = dom.inputText.value;
-
-        const subStatusEl = document.getElementById('sub-status');
+        const subStatusEl = setProcessingState(true);
 
         try {
             const level = state.activeLevel;
             const modelConfig = MODELS[level];
 
-            subStatusEl.textContent = '1/3: Buscando correcciones...';
-            const correctionPrompt = PROMPTS.correction[level](state.originalText);
+            if (subStatusEl) subStatusEl.textContent = '1/3: Analizando correcciones...';
+            const correctionPrompt = PROMPTS.correction[level](textToAnalyze);
             const correctionResult = await callAI(correctionPrompt, modelConfig, true);
-            state.corrections = processAIResponse(correctionResult, 'corrections', 'correction');
-
-            subStatusEl.textContent = '2/3: Buscando sugerencias...';
-            const suggestionPrompt = PROMPTS.suggestion[level](state.originalText);
+            
+            if (subStatusEl) subStatusEl.textContent = '2/3: Analizando sugerencias...';
+            const suggestionPrompt = PROMPTS.suggestion[level](textToAnalyze);
             const suggestionResult = await callAI(suggestionPrompt, modelConfig, true);
+
+            if (subStatusEl) subStatusEl.textContent = '3/3: Reestructurando texto...';
+            const restructuringPrompt = PROMPTS.restructuring(textToAnalyze);
+            const restructuredResult = await callAI(restructuringPrompt, modelConfig, false);
+
+            state.corrections = processAIResponse(correctionResult, 'corrections', 'correction');
             state.suggestions = processAIResponse(suggestionResult, 'suggestions', 'suggestion');
-
-            subStatusEl.textContent = '3/3: Realizando pulido final...';
-            const finalReviewPrompt = PROMPTS.final_review(state.originalText);
-            state.revisadoText = await callAI(finalReviewPrompt, modelConfig, false);
-
+            state.restructuredText = restructuredResult || textToAnalyze; 
+            
+            state.analysisCompleted = true;
             setActiveMode('correction');
 
         } catch (error) {
-            console.error("Error en el proceso de análisis:", error);
-            dom.outputText.innerHTML = `<p style="color: var(--red-accent); text-align: center;">${error.message}</p>`;
+            console.error("Error detallado en el proceso de análisis:", error);
+            showUserMessage(error.message, true);
+            state.analysisCompleted = false;
         } finally {
             setProcessingState(false);
+            updateUI();
         }
     }
-
     function setProcessingState(isProcessing) {
         state.isProcessing = isProcessing;
         dom.pulirBtn.disabled = isProcessing;
@@ -125,77 +139,57 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (isProcessing) {
             dom.outputText.innerHTML = `<div class="output-status"><div class="output-status-main processing-dots">Analizando</div><div id="sub-status" class="output-status-sub"></div></div>`;
+            return document.getElementById('sub-status');
         }
+        return null;
     }
 
     function processAIResponse(result, key, type) {
-        if (!result || !result[key] || !Array.isArray(result[key])) {
-            console.warn(`Respuesta de IA inválida o vacía para la clave "${key}"`);
-            return [];
-        }
+        if (!result || !result[key] || !Array.isArray(result[key])) return [];
         return result[key].map((item, i) => {
+            if (!item.original) return null;
             const offset = state.originalText.indexOf(item.original);
             if (offset === -1) return null;
-            return {
-                id: `${type[0]}${i}`, type: type,
-                original: item.original, replacement: item.replacement,
-                reason: item.reason, offset: offset,
-                length: item.original.length, status: 'pending'
-            };
-        }).filter(Boolean);
+            return { id: `${type[0]}${i}`, type: type, original: item.original, replacement: item.replacement, reason: item.reason, offset: offset, length: item.original.length, status: 'pending' };
+        }).filter(c => c && !state.dictionary.includes(c.original.toLowerCase()));
     }
 
     // =================================================================================
     // --- MOTOR DE IA ---
     // =================================================================================
-
     async function callAI(prompt, modelConfig, expectJson = false) {
         const { engine, model } = modelConfig;
         const apiKey = API_KEYS[engine];
-        if (!apiKey || apiKey.includes("xxxx")) {
-            throw new Error(`La API Key para ${engine} no está configurada.`);
-        }
-
-        let url, headers, body;
+        if (!apiKey || apiKey.includes("TuClave")) throw new Error(`La API Key para ${engine} no está configurada.`);
+        
         const messages = [{ role: "user", content: prompt }];
+        let url, headers, body;
 
         if (engine === 'GROQ') {
             url = 'https://api.groq.com/openai/v1/chat/completions';
             headers = { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' };
-            body = { model, messages, temperature: 0.3 };
+            body = { model, messages, temperature: 0.1, top_p: 0.5 };
             if (expectJson) body.response_format = { type: "json_object" };
-        } else if (engine === 'HUGGING_FACE') {
-            url = `https://api-inference.huggingface.co/models/${model}`;
-            headers = { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' };
-            const hfPrompt = expectJson ? `${prompt} Devuelve solo el objeto JSON.` : prompt;
-            body = { inputs: hfPrompt, parameters: { return_full_text: false, max_new_tokens: 2048 } };
-        } else {
-            throw new Error("Motor de IA no reconocido.");
+        } else { 
+            throw new Error("Motor Hugging Face no implementado en esta versión.");
         }
 
         const response = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
         if (!response.ok) {
             const errorText = await response.text();
-            console.error(`Error en la API (${engine}):`, errorText);
-            throw new Error(`Error en la API de ${engine} (código: ${response.status}).`);
+            throw new Error(`Error en la API de ${engine} (${response.status}). Detalles: ${errorText}`);
         }
-        
         const result = await response.json();
-        let content = '';
-
-        if (engine === 'GROQ') {
-            content = result.choices[0].message.content;
-        } else if (engine === 'HUGGING_FACE') {
-            content = result[0].generated_text;
+        if (!result.choices || result.choices.length === 0) {
+            throw new Error("La respuesta de la IA no contiene 'choices'.");
         }
-
+        let content = result.choices[0].message.content;
         if (expectJson) {
             try {
-                const jsonString = content.substring(content.indexOf('{'), content.lastIndexOf('}') + 1);
-                return JSON.parse(jsonString);
-            } catch (e) {
-                console.error("Error al parsear JSON de la IA:", content);
-                throw new Error("La IA devolvió una respuesta JSON inválida.");
+                return JSON.parse(content);
+            } catch (e) { 
+                console.error("Contenido JSON inválido recibido de la IA:", content);
+                throw new Error("La IA devolvió un JSON con formato incorrecto."); 
             }
         }
         return content;
@@ -204,7 +198,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // =================================================================================
     // --- MANEJO DE MODOS Y RENDERIZADO ---
     // =================================================================================
-
     function updateUI() {
         buildControlPanels();
         renderOutputBox();
@@ -216,45 +209,32 @@ document.addEventListener('DOMContentLoaded', () => {
             suggestion: state.suggestions.filter(s => s.status === 'pending').length,
             revisado: state.corrections.filter(c => c.status === 'pending').length
         };
-
-        const engineSelectorHTML = `
-            <div id="engine-selector-container-panel">
-                <label for="engine-selector-main" class="engine-label">Motor IA:</label>
-                <select id="engine-selector-main" class="engine-select">
-                    <option value="GRATUITO">${MODELS['GRATUITO'].name}</option>
-                    <option value="PREMIUM">${MODELS['PREMIUM'].name}</option>
-                    <option value="PRO">${MODELS['PRO'].name}</option>
-                </select>
-            </div>`;
-
+        const engineSelectorHTML = `<div id="engine-selector-container-panel"><label for="engine-selector-main" class="engine-label">Motor IA:</label><select id="engine-selector-main" class="engine-select"><option value="GRATUITO">${MODELS['GRATUITO'].name}</option><option value="PREMIUM" disabled>${MODELS['PREMIUM'].name}</option><option value="PRO" disabled>${MODELS['PRO'].name}</option></select></div>`;
         const modesHTML = Object.keys(MODES).map(modeKey => createModeButton(modeKey, counts[modeKey])).join('');
-        
         const panelHTML = `${engineSelectorHTML}<div class="modes-wrapper">${modesHTML}</div>`;
 
         [dom.mainControlPanel, dom.focusControlPanel].forEach(panel => {
             panel.innerHTML = panelHTML;
-
             const engineSelector = panel.querySelector('.engine-select');
             if (engineSelector) {
                 engineSelector.value = state.activeLevel;
                 engineSelector.addEventListener('change', (e) => {
                     state.activeLevel = e.target.value;
-                    const otherSelector = (panel === dom.mainControlPanel ? dom.focusControlPanel : dom.mainControlPanel).querySelector('.engine-select');
+                    const otherSelectorId = panel.id === 'main-control-panel' ? 'focus-control-panel' : 'main-control-panel';
+                    const otherSelector = document.getElementById(otherSelectorId).querySelector('.engine-select');
                     if (otherSelector) otherSelector.value = state.activeLevel;
                     handleTextInput();
                 });
             }
-
             panel.querySelectorAll('.mode-control').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.mode === state.activeMode);
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    const mode = btn.dataset.mode;
-                    setActiveMode(state.activeMode === mode ? null : mode);
+                    handleModeButtonClick(btn.dataset.mode);
                 });
                 btn.querySelector('.mode-help-btn')?.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    showHelpTooltip(e.currentTarget.closest('.mode-control'));
+                    showHelpTooltip(e.currentTarget);
                 });
             });
         });
@@ -263,17 +243,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function createModeButton(modeKey, count) {
         const modeInfo = MODES[modeKey];
         const labelHtml = modeInfo.name.replace('\n', '<br>');
-        return `
-            <div class="mode-control" data-mode="${modeKey}">
-                <div class="mode-label-wrapper">
-                    <span class="label">${labelHtml}</span>
-                    <span class="mode-help-btn" data-mode-help="${modeKey}">?</span>
-                </div>
-                <div class="mode-button-wrapper">
-                    <div class="mode-btn-circle"></div>
-                    <span class="count">${count}</span>
-                </div>
-            </div>`;
+        return `<div class="mode-control" data-mode="${modeKey}"><div class="mode-label-wrapper"><span class="label">${labelHtml}</span><span class="mode-help-btn" data-mode-help="${modeKey}">?</span></div><div class="mode-button-wrapper"><div class="mode-btn-circle"></div><span class="count">${count}</span></div></div>`;
+    }
+
+    function handleModeButtonClick(mode) {
+        if (!state.analysisCompleted) {
+            showUserMessage("Para ver los resultados, primero pulsa 'Pulir Texto'.");
+            return;
+        }
+        setActiveMode(state.activeMode === mode ? null : mode);
     }
 
     function setActiveMode(mode) {
@@ -287,51 +265,86 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderOutputBox() {
         const targetElement = state.isFocusMode ? dom.focusContent : dom.outputText;
         if (state.isProcessing) return;
-        if (!state.originalText) {
+
+        if (!state.analysisCompleted) {
             targetElement.innerHTML = '<p style="color: #666;">Aquí aparecerá tu texto pulido...</p>';
             return;
         }
+        
         if (!state.activeMode) {
             targetElement.innerHTML = '<p style="color: #666; text-align: center; padding-top: 20px;">Análisis completado. Seleccione un modo.</p>';
             return;
         }
 
-        let html = '';
-        const acceptedChanges = [...state.corrections, ...state.suggestions].filter(c => c.status === 'accepted');
-        
-        if (state.activeMode === 'correction') {
-            let baseText = applyChanges(state.originalText, acceptedChanges);
-            html = generateHtmlWithHighlights(baseText, state.corrections.filter(c => c.status === 'pending'), 'correction');
-        } else if (state.activeMode === 'suggestion') {
-            let baseText = applyChanges(state.originalText, acceptedChanges);
-            html = generateHtmlWithHighlights(baseText, state.suggestions.filter(s => s.status === 'pending'), 'suggestion');
-        } else if (state.activeMode === 'revisado') {
-            let baseText = applyChanges(state.revisadoText || state.originalText, acceptedChanges);
-            html = generateHtmlWithHighlights(baseText, state.corrections.filter(c => c.status === 'pending'), 'correction');
+        let baseText;
+        let changes = [];
+
+        switch (state.activeMode) {
+            case 'correction':
+                baseText = state.originalText;
+                changes = state.corrections;
+                break;
+            case 'suggestion':
+                baseText = state.originalText;
+                changes = state.suggestions;
+                break;
+            case 'revisado':
+                baseText = state.restructuredText;
+                changes = state.corrections;
+                break;
+            default:
+                targetElement.innerHTML = '<p style="color: #666;">Modo no reconocido.</p>';
+                return;
         }
+        
+        if (typeof baseText !== 'string') {
+            targetElement.innerHTML = '<p style="color: var(--red-accent); text-align: center;">Error: No se pudo cargar el texto base para este modo.</p>';
+            return;
+        }
+
+        const html = generateHtmlWithHighlights(baseText, changes);
         targetElement.innerHTML = html.replace(/\n/g, '<br>');
     }
 
-    function generateHtmlWithHighlights(baseText, changes, type) {
-        let parts = [];
-        let lastIndex = 0;
-        const sortedChanges = [...changes].sort((a, b) => a.offset - b.offset);
-        sortedChanges.forEach(change => {
-            parts.push(escapeHtml(baseText.substring(lastIndex, change.offset)));
-            parts.push(`<span class="${type}" data-id="${change.id}">${escapeHtml(baseText.substring(change.offset, change.offset + change.length))}</span>`);
-            lastIndex = change.offset + change.length;
+    function generateHtmlWithHighlights(baseText, changes) {
+        if (!baseText) return '';
+
+        let currentText = baseText;
+        const acceptedChanges = [...state.corrections, ...state.suggestions].filter(c => c.status === 'accepted');
+        
+        acceptedChanges.sort((a, b) => b.offset - a.offset).forEach(change => {
+            if (currentText.substring(change.offset, change.offset + change.original.length) === change.original) {
+                 currentText = currentText.substring(0, change.offset) + change.replacement + currentText.substring(change.offset + change.original.length);
+            }
         });
-        parts.push(escapeHtml(baseText.substring(lastIndex)));
+
+        let lastIndex = 0;
+        const parts = [];
+        const pendingChanges = changes.filter(c => c.status === 'pending').sort((a, b) => a.offset - b.offset);
+        
+        let tempTextForHighlighting = currentText;
+
+        pendingChanges.forEach(change => {
+            const originalChangeText = change.original;
+            const currentPosition = tempTextForHighlighting.indexOf(originalChangeText, lastIndex);
+
+            if (currentPosition !== -1) {
+                parts.push(escapeHtml(tempTextForHighlighting.substring(lastIndex, currentPosition)));
+                parts.push(`<mark class="${change.type}" data-id="${change.id}">${escapeHtml(originalChangeText)}</mark>`);
+                lastIndex = currentPosition + originalChangeText.length;
+            }
+        });
+        parts.push(escapeHtml(tempTextForHighlighting.substring(lastIndex)));
+        
         return parts.join('');
     }
-
     // =================================================================================
     // --- MODO ENFOQUE ---
     // =================================================================================
-
     function enterFocusMode(source) {
         state.isFocusMode = true;
         dom.body.classList.add('focus-mode');
+
         if (source === 'input') {
             dom.focusTitle.textContent = 'Editor de Entrada';
             dom.focusContent.innerHTML = escapeHtml(dom.inputText.value).replace(/\n/g, '<br>');
@@ -346,7 +359,6 @@ document.addEventListener('DOMContentLoaded', () => {
             dom.focusDownloadBtn.style.display = 'inline-flex';
             renderOutputBox();
         }
-        updateUI();
     }
 
     function exitFocusMode() {
@@ -356,25 +368,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleSwipe(e) {
-        if (!state.isFocusMode || !state.activeMode) return;
+        if (!state.isFocusMode || !state.activeMode || !state.analysisCompleted || !e.changedTouches[0]) return;
         const touchEndX = e.changedTouches[0].clientX;
         const swipeDistance = touchEndX - state.touchStartX;
         if (Math.abs(swipeDistance) < 50) return;
-
         const modeKeys = Object.keys(MODES);
         const currentIndex = modeKeys.indexOf(state.activeMode);
         let newIndex = currentIndex;
-
         if (swipeDistance > 0 && currentIndex > 0) newIndex--;
         else if (swipeDistance < 0 && currentIndex < modeKeys.length - 1) newIndex++;
-        
         if (newIndex !== currentIndex) setActiveMode(modeKeys[newIndex]);
     }
 
     // =================================================================================
     // --- EVENT LISTENERS Y FUNCIONES AUXILIARES ---
     // =================================================================================
-
     function setupEventListeners() {
         window.addEventListener('resize', setAppHeight);
         if (window.visualViewport) { window.visualViewport.addEventListener('resize', setAppHeight); }
@@ -383,30 +391,36 @@ document.addEventListener('DOMContentLoaded', () => {
             dom.introScreen.classList.add('hidden');
             dom.editorScreen.classList.remove('hidden');
         });
-        
+
         dom.inputText.addEventListener('input', handleTextInput);
         dom.clearInputBtn.addEventListener('click', clearInput);
-        dom.clearOutputBtn.addEventListener('click', clearOutput);
-        
+        dom.clearOutputBtn.addEventListener('click', clearPreviousResults);
         dom.copyBtn.addEventListener('click', handleCopy);
         dom.downloadBtn.addEventListener('click', handleDownload);
         dom.focusCopyBtn.addEventListener('click', handleCopy);
         dom.focusDownloadBtn.addEventListener('click', handleDownload);
-        
         dom.pulirBtn.addEventListener('click', runAnalysis);
         
-        // MODO ENFOQUE: Event listeners de doble click
         [dom.inputText, dom.outputText].forEach(box => {
             box.addEventListener('dblclick', () => enterFocusMode(box === dom.inputText ? 'input' : 'output'));
         });
-        dom.focusCloseBtn.addEventListener('click', exitFocusMode);
         
-        // MODO ENFOQUE: Event listeners de swipe
+        dom.focusCloseBtn.addEventListener('click', exitFocusMode);
         dom.focusContent.addEventListener('touchstart', (e) => { state.touchStartX = e.touches[0].clientX; }, { passive: true });
         dom.focusContent.addEventListener('touchend', handleSwipe, { passive: true });
         
         document.addEventListener('click', handleGlobalClick);
-        
+
+        const textClickHandler = (e) => {
+            const mark = e.target.closest('mark.correction, mark.suggestion');
+            if (mark) {
+                showTooltip(mark, e.currentTarget);
+            }
+        };
+        dom.outputText.addEventListener('click', textClickHandler);
+        dom.focusContent.addEventListener('click', textClickHandler);
+        dom.tooltip.addEventListener('click', handleTooltipClick);
+
         [dom.outputText, dom.focusContent].forEach(el => {
             el.addEventListener('scroll', () => {
                 if (state.currentTooltip) positionTooltip(state.currentTooltip.tooltip, state.currentTooltip.span, state.isFocusMode ? dom.focusView : dom.editorContainer);
@@ -414,63 +428,71 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-   function handleTextInput() {
-    const text = dom.inputText.value;
-    const wordCount = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
-    const charCount = text.length;
-    
-    // --- ESTA ES LA LÓGICA NUEVA ---
-    // 1. Obtiene el nivel de motor activo desde el estado de la aplicación.
-    const activeModelConfig = MODELS[state.activeLevel];
-    // 2. Lee el límite máximo de palabras para ese nivel.
-    const max_words = activeModelConfig.max_words;
+    function handleTextInput() {
+        const text = dom.inputText.value;
+        const wordCount = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+        const charCount = text.length;
+        const max_words = MODELS[state.activeLevel].max_words;
 
-    // 3. Actualiza el contador en la UI con el límite correcto y formato de miles.
-    dom.wordCounter.textContent = `${wordCount.toLocaleString('es')} / ${max_words.toLocaleString('es')} palabras`;
-    dom.charCounter.textContent = `${charCount.toLocaleString('es')} caracteres`;
-    
-    // 4. Comprueba si se ha superado el límite y deshabilita el botón si es necesario.
-    if (wordCount > max_words || text.trim() === '') {
-        dom.wordCounter.style.color = wordCount > max_words ? 'var(--red-accent)' : 'var(--text-off-color)';
-        dom.pulirBtn.disabled = true;
-    } else {
-        dom.wordCounter.style.color = 'var(--text-off-color)';
-        dom.pulirBtn.disabled = state.isProcessing;
+        dom.wordCounter.textContent = `${wordCount.toLocaleString('es')} / ${max_words.toLocaleString('es')} palabras`;
+        dom.charCounter.textContent = `${charCount.toLocaleString('es')} caracteres`;
+
+        const hasText = text.trim() !== '';
+        const isWithinLimit = wordCount <= max_words;
+        const canProcess = hasText && isWithinLimit && !state.isProcessing;
+
+        dom.pulirBtn.disabled = !canProcess;
+
+        if (wordCount > max_words) {
+            dom.wordCounter.style.color = 'var(--red-accent)';
+        } else {
+            dom.wordCounter.style.color = 'var(--text-off-color)';
+        }
     }
-}
-
 
     function clearInput() {
         dom.inputText.value = '';
         handleTextInput();
+        clearPreviousResults();
     }
 
-    function clearOutput() {
-        state.originalText = '';
-        state.corrections = [];
-        state.suggestions = [];
-        state.revisadoText = '';
-        state.activeMode = null;
-        dom.outputText.innerHTML = '<p style="color: #666;">Aquí aparecerá tu texto pulido...</p>';
+    function clearPreviousResults() {
+        state.originalText = ''; state.corrections = []; state.suggestions = []; state.restructuredText = ''; state.activeMode = null; state.analysisCompleted = false;
         updateUI();
     }
 
     function handleCopy(e) {
-        const button = e.target;
+        const button = e.target.closest('button');
+        if (!button) return;
+
+        if (!state.analysisCompleted) {
+            showUserMessage("Debes 'Pulir Texto' antes de poder copiar los resultados.", false);
+            return;
+        }
+
         const textToCopy = getFinalText();
-        if (!textToCopy) return;
+        
+        if (!textToCopy.trim()) {
+            showUserMessage("No hay texto pulido para copiar.", false);
+            return;
+        }
+
         navigator.clipboard.writeText(textToCopy).then(() => {
             const originalText = button.textContent;
             button.textContent = '¡Copiado!';
             button.classList.add('confirm');
-            setTimeout(() => {
-                button.textContent = originalText;
-                button.classList.remove('confirm');
+            setTimeout(() => { 
+                button.textContent = originalText; 
+                button.classList.remove('confirm'); 
             }, 2000);
         });
     }
 
     function handleDownload() {
+        if (!state.analysisCompleted) {
+            showUserMessage("Debes 'Pulir Texto' antes de poder descargar los resultados.", false);
+            return;
+        }
         const textToDownload = getFinalText();
         if (!textToDownload) return;
         const header = `--- Texto Analizado por Veridian ---\nFecha: ${new Date().toLocaleString('es-ES')}\nNivel de IA: ${state.activeLevel}\n--------------------------------------\n\n`;
@@ -479,43 +501,39 @@ document.addEventListener('DOMContentLoaded', () => {
         const blob = new Blob([fullContent], { type: 'text/plain;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = 'Veridian_Texto_Analizado.txt';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        a.href = url; a.download = 'Veridian_Texto_Analizado.txt';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     }
     
     function getFinalText() {
-        if (!state.originalText) return '';
-        let baseText = state.originalText;
-        const acceptedChanges = [...state.corrections, ...state.suggestions].filter(c => c.status === 'accepted');
-        return applyChanges(baseText, acceptedChanges);
-    }
+        if (!state.analysisCompleted) return '';
 
-    function applyChanges(text, changes) {
-        let tempText = text;
-        [...changes].sort((a, b) => b.offset - a.offset).forEach(change => {
-            if (change.offset !== undefined && change.offset + change.length <= tempText.length) {
-                tempText = tempText.substring(0, change.offset) + change.replacement + tempText.substring(change.offset + change.length);
+        let baseText;
+        let changesToApply = [];
+
+        if (state.activeMode === 'revisado') {
+            baseText = state.restructuredText;
+            // En modo revisado, solo se aplican las correcciones aceptadas
+            changesToApply = state.corrections.filter(c => c.status === 'accepted');
+        } else {
+            baseText = state.originalText;
+            // En otros modos, se aplican tanto correcciones como sugerencias aceptadas
+            changesToApply = [...state.corrections, ...state.suggestions].filter(c => c.status === 'accepted');
+        }
+        
+        changesToApply.sort((a, b) => b.offset - a.offset).forEach(change => {
+            if (baseText.substring(change.offset, change.offset + change.original.length) === change.original) {
+                 baseText = baseText.substring(0, change.offset) + change.replacement + baseText.substring(change.offset + change.original.length);
             }
         });
-        return tempText;
+
+        return baseText;
     }
 
     function handleGlobalClick(e) {
-        const tooltip = e.target.closest('#tooltip');
-        if (tooltip) {
-            handleTooltipClick(e);
-            return;
+        if (!e.target.closest('#tooltip, mark.correction, mark.suggestion')) {
+            hideTooltip();
         }
-        const span = e.target.closest('.correction, .suggestion');
-        if (span) {
-            showTooltip(span, e.currentTarget);
-            return;
-        }
-        hideTooltip();
     }
 
     function showTooltip(span, container) {
@@ -524,15 +542,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const change = findChangeById(changeId);
         if (!change) return;
 
+        let tooltipHtml = '';
         if (state.activeMode === 'revisado' && change.type === 'correction') {
-            dom.tooltip.innerHTML = `<div class="tooltip-guide"><p>Para gestionar esta corrección, por favor, vaya al modo <strong>Corrección</strong>.</p><button class="go-to-correction">Ir a Corrección</button></div>`;
+            tooltipHtml = `<div class="tooltip-guide">
+                               <p>Este error debe gestionarse en el modo <strong>Corrección</strong>.</p>
+                               <button class="go-to-correction">Ir a Corrección</button>
+                           </div>`;
         } else {
             let buttonsHtml = `<button class="accept-btn">Aceptar</button>`;
             if (change.type === 'correction') {
                 buttonsHtml += `<button class="dict-btn">Añadir Diccionario</button>`;
             }
             buttonsHtml += `<button class="ignore-btn">Ignorar</button>`;
-            dom.tooltip.innerHTML = `
+            tooltipHtml = `
                 <div class="tooltip-content">
                     <span class="original">${escapeHtml(change.original)}</span> → <strong class="replacement">${escapeHtml(change.replacement)}</strong>
                     <span class="explanation">${escapeHtml(change.reason)}</span>
@@ -540,6 +562,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="tooltip-actions">${buttonsHtml}</div>`;
         }
         
+        dom.tooltip.innerHTML = tooltipHtml;
         positionTooltip(dom.tooltip, span, container);
         dom.tooltip.classList.add('visible');
         state.currentTooltip = { tooltip: dom.tooltip, span, change };
@@ -549,19 +572,23 @@ document.addEventListener('DOMContentLoaded', () => {
         e.stopPropagation();
         const button = e.target.closest('button');
         if (!button || !state.currentTooltip) return;
+
         const { change } = state.currentTooltip;
 
-        if (button.classList.contains('accept-btn')) change.status = 'accepted';
-        if (button.classList.contains('ignore-btn')) change.status = 'ignored';
-        if (button.classList.contains('dict-btn')) {
+        if (button.classList.contains('accept-btn')) {
+            change.status = 'accepted';
+        } else if (button.classList.contains('ignore-btn')) {
+            change.status = 'ignored';
+        } else if (button.classList.contains('dict-btn')) {
             const word = change.original.toLowerCase();
             if (!state.dictionary.includes(word)) {
                 state.dictionary.push(word);
                 localStorage.setItem('veridian_dictionary', JSON.stringify(state.dictionary));
             }
             state.corrections = state.corrections.filter(c => c.original.toLowerCase() !== word);
+        } else if (button.classList.contains('go-to-correction')) {
+            setActiveMode('correction');
         }
-        if (button.classList.contains('go-to-correction')) setActiveMode('correction');
         
         hideTooltip();
         updateUI();
@@ -613,36 +640,30 @@ document.addEventListener('DOMContentLoaded', () => {
         return unsafe ? unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;") : "";
     }
 
-    function setAppHeight() {
-    // 1. Guardamos la altura inicial de la ventana cuando la app carga.
-    const initialHeight = window.innerHeight;
-    document.documentElement.style.setProperty('--app-height', `${initialHeight}px`);
-
-    // 2. Creamos una función que se ejecutará CADA VEZ que la ventana cambie de tamaño.
-    const handleResize = () => {
-        // 3. SOLO actualizamos la altura si la nueva altura NO es significativamente más pequeña.
-        // Esto ignora el cambio de tamaño causado por la aparición del teclado.
-        if (window.innerHeight >= initialHeight - 200) { // Un umbral de 200px para detectar el teclado
-            const newHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-            document.documentElement.style.setProperty('--app-height', `${newHeight}px`);
-        }
-    };
-    
-    // 4. Escuchamos los eventos de redimensionamiento para aplicar nuestra lógica.
-    window.addEventListener('resize', handleResize);
-    if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', handleResize);
+    function showUserMessage(message, isError = false) {
+        const targetElement = state.isFocusMode ? dom.focusContent : dom.outputText;
+        targetElement.innerHTML = `<p style="color: ${isError ? 'var(--red-accent)' : '#666'}; text-align: center; padding-top: 20px;">${message}</p>`;
     }
-}
 
+    function setAppHeight() {
+        const initialHeight = window.innerHeight;
+        document.documentElement.style.setProperty('--app-height', `${initialHeight}px`);
+        const handleResize = () => {
+            if (window.innerHeight >= initialHeight - 200) {
+                const newHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+                document.documentElement.style.setProperty('--app-height', `${newHeight}px`);
+            }
+        };
+        window.addEventListener('resize', handleResize);
+        if (window.visualViewport) { window.visualViewport.addEventListener('resize', handleResize); }
+    }
 
-    // --- PUNTO DE ENTRADA PRINCIPAL ---
     function initializeApp() {
         state.dictionary = JSON.parse(localStorage.getItem('veridian_dictionary')) || [];
         setupEventListeners();
         setAppHeight();
         dom.pulirBtn.disabled = true;
-        updateUI(); // ¡¡LLAMADA INICIAL PARA CONSTRUIR EL PANEL!!
+        updateUI();
     }
 
     initializeApp();
