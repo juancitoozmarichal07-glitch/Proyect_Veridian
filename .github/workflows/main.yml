@@ -1,18 +1,24 @@
 name: Build Veridian (APK DEPURACIÓN)
 
 on:
+  # Se ejecuta automáticamente cada vez que haces push a la rama "main"
   push:
-    branches: [ "main" ] # O "master" si ese es el nombre de tu rama
+    branches: [ "main" ]
+  
+  # Te permite ejecutarlo manualmente desde la pestaña "Actions" en GitHub
   workflow_dispatch:
 
 jobs:
   build:
+    # Usará la última versión de Ubuntu para compilar
     runs-on: ubuntu-latest
 
     steps:
+      # PASO 1: Descarga el código de tu repositorio para que el workflow pueda usarlo.
       - name: 'PASO 1: Clonando tu proyecto...'
         uses: actions/checkout@v4
 
+      # PASO 2: Instala las herramientas necesarias: Java para Android y Node.js para Cordova.
       - name: 'PASO 2: Configurando el entorno (Java y Node.js)...'
         uses: actions/setup-java@v4
         with:
@@ -22,20 +28,30 @@ jobs:
         with:
           node-version: '18'
 
+      # PASO 3: Instala Cordova globalmente en el entorno de compilación.
       - name: 'PASO 3: Instalando Cordova...'
         run: npm install -g cordova
 
+      # PASO 4 (CORREGIDO): Reemplaza los placeholders usando un delimitador seguro (#)
+      # para evitar errores con caracteres especiales en las claves.
       - name: 'PASO 4: Inyectando Claves API...'
         run: |
-          sed -i 's|const GROQ_API_KEY = "";|const GROQ_API_KEY = "${{ secrets.GROQ_API_KEY }}";|' www/script.js
-          sed -i 's|const HUGGING_FACE_API_KEY = "";|const HUGGING_FACE_API_KEY = "${{ secrets.HUGGING_FACE_API_KEY }}";|' www/script.js
+          sed -i 's#%%GROQ_API_KEY%%#${{ secrets.GROQ_API_KEY }}#g' www/script.js
+          sed -i 's#%%HUGGING_FACE_API_KEY%%#${{ secrets.HUGGING_FACE_API_KEY }}#g' www/script.js
 
+      # PASO 5: Prepara el proyecto para la plataforma Android.
       - name: 'PASO 5: Añadiendo la plataforma Android...'
         run: cordova platform add android
 
+      # PASO 5.5: Instala el plugin que permite las conexiones a internet desde la APK.
+      - name: 'PASO 5.5: Instalando el plugin Allow List para las conexiones de red...'
+        run: cordova plugin add cordova-plugin-allow-list
+
+      # PASO 6: Compila el código y genera el archivo APK en modo de depuración.
       - name: 'PASO 6: CONSTRUYENDO EL APK DE DEPURACIÓN...'
         run: cordova build android --debug
 
+      # PASO 7: Sube el APK generado como un "artefacto" para que puedas descargarlo.
       - name: 'PASO 7: Subiendo el APK de Depuración...'
         uses: actions/upload-artifact@v4
         with:
