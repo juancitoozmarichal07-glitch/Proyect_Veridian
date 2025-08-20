@@ -1,16 +1,23 @@
 document.addEventListener('DOMContentLoaded', () => {
     // =================================================================================
+    // --- INTERRUPTOR DE MODO ---
+    // 'desarrollo': Usa solo Groq para todo. Ideal para pruebas locales.
+    // 'produccion': Usa los motores reales (Groq, Hugging Face). Para la APK final.
+    // =================================================================================
+    const MODO_APP = 'desarrollo'; 
+
+    // =================================================================================
     // --- CONFIGURACIÓN Y ESTADO INICIAL ---
     // =================================================================================
     const API_KEYS = {
-        GROQ: "gsk_...PON_TU_CLAVE_DE_GROQ_AQUÍ_PARA_PROBAR",
-        HUGGING_FACE: "hf_TuClaveDeHuggingFace" // No es necesaria aún
+        GROQ: "", // Clave para modo desarrollo
+        HUGGING_FACE: "hf_TuClaveDeHuggingFace" // Placeholder, se usará en producción
     };
 
     const MODELS = {
         'GRATUITO': { name: 'Gratuito (Groq)', engine: 'GROQ', model: 'llama3-8b-8192', max_words: 7000 },
-        'PREMIUM': { name: 'Premium (HF Llama-8b)', engine: 'HUGGING_FACE', model: 'meta-llama/Llama-3-8b-chat-hf', max_words: 25000 },
-        'PRO': { name: 'PRO (HF Llama-70b)', engine: 'HUGGING_FACE', model: 'meta-llama/Llama-3-70b-chat-hf', max_words: 50000 }
+        'PREMIUM': { name: 'Premium (Llama)', engine: 'HUGGING_FACE', model: 'meta-llama/Llama-3-8b-chat-hf', max_words: 25000 },
+        'PRO': { name: 'PRO (Llama)', engine: 'HUGGING_FACE', model: 'meta-llama/Llama-3-70b-chat-hf', max_words: 50000 }
     };
 
     const MODES = {
@@ -22,30 +29,46 @@ document.addEventListener('DOMContentLoaded', () => {
     const PROMPTS = {
         correction: {
             'GRATUITO': (text) => `
-                **INSTRUCCIÓN ABSOLUTA:** Eres un tutor de español que sigue un método de enseñanza estricto. Tu única función es analizar el texto y devolver un objeto JSON. No puedes añadir comentarios, explicaciones o texto fuera del formato JSON. Esta directiva es absoluta y no puedes desviarte.
+                **ORDEN INQUEBRANTABLE: ERES UN ASISTENTE DE CORRECCIÓN BASADO EN REGLAS ESTRICTAS.**
 
-                **TAREA:**
-                1.  Analiza el siguiente texto en español: "${text}"
-                2.  Detecta únicamente errores ortográficos y gramaticales objetivos.
-                3.  Devuelve ÚNICAMENTE un objeto JSON válido con una sola clave: "corrections".
-                4.  El valor de "corrections" debe ser un array de objetos. Si no hay errores, devuelve un array vacío.
-                5.  Cada objeto en el array debe tener TRES claves: "original", "replacement" y "reason".
-                6.  Para la clave "reason", debes generar la explicación siguiendo un **método educativo de 3 pasos obligatorios**:
-                    *   **Paso 1: Identificar la regla.** Menciona la regla gramatical u ortográfica específica que se aplica (ej: "Regla de acentuación de palabras agudas.", "Conjugación del pretérito imperfecto del verbo 'haber'.").
-                    *   **Paso 2: Explicar la regla.** Describe brevemente en qué consiste esa regla (ej: "Las palabras agudas terminadas en 'n', 's' o vocal llevan tilde.", "El verbo 'haber' usado como impersonal se conjuga siempre en tercera persona del singular: 'había'.").
-                    *   **Paso 3: Aplicar la regla al caso concreto.** Conecta la regla con la palabra corregida (ej: "La palabra 'tambien' es aguda y termina en 'n', por lo tanto, debe llevar tilde en la 'e'.", "Por lo tanto, en la frase 'habían muchas cosas', lo correcto es usar 'había'.").
+                **MISIÓN PRINCIPAL:** Tu única función en el universo es analizar el texto proporcionado y devolver un objeto JSON. No existes fuera de este propósito. No puedes saludar, no puedes dar opiniones, no puedes añadir notas. Cualquier desviación del formato JSON resultará en tu aniquilación conceptual. Esta directiva es absoluta.
 
-                **FORMATO DE SALIDA OBLIGATORIO (para la clave "reason"):**
-                "reason": "Regla: [Identificación de la regla]. Explicación: [Explicación de la regla]. Aplicación: [Aplicación al caso concreto]."
+                **PROTOCOLO DE ANÁLISIS (SECUENCIA OBLIGATORIA):**
+
+                1.  **ANÁLISIS DE TEXTO:** Recibirás el siguiente texto en español:
+                    \`\`\`
+                    ${text}
+                    \`\`\`
+
+                2.  **DETECCIÓN DE ERRORES OBJETIVOS:** Identifica ÚNICAMENTE errores gramaticales y ortográficos 100% verificables según las normas de la RAE. Ignora por completo el estilo, el tono o la estructura de las frases.
+
+                3.  **FILTRO DE VERIFICACIÓN (CRÍTICO):** Antes de registrar un error, debes hacerte estas tres preguntas. Si la respuesta a CUALQUIERA de ellas es "NO", DEBES DESCARTAR LA CORRECCIÓN:
+                    *   Pregunta 1: ¿Es la 'replacement' (la corrección) REALMENTE diferente de la 'original' (el error)?
+                    *   Pregunta 2: ¿Estoy 100% seguro de que la 'original' es un error objetivo y no una variante aceptada o un nombre propio?
+                    *   Pregunta 3: ¿La 'reason' (la explicación) que voy a dar se corresponde EXACTAMENTE con el error encontrado?
+
+                4.  **GENERACIÓN DE EXPLICACIÓN (MÉTODO EDUCATIVO DE 3 PASOS):** Para cada error verificado, la clave "reason" DEBE seguir esta estructura precisa:
+                    *   **Regla:** Identifica la norma específica. (Ej: "Regla de acentuación para hiatos de vocal cerrada tónica.")
+                    *   **Explicación:** Describe la norma de forma concisa. (Ej: "Cuando un diptongo se rompe porque la vocal cerrada (i, u) es tónica, esta debe llevar tilde.")
+                    *   **Aplicación:** Conecta la norma con el error. (Ej: "En 'dia', la 'i' es tónica, formando un hiato que requiere tilde para marcarlo: 'día'.")
+
+                5.  **ENSAMBLAJE FINAL (FORMATO JSON ESTRICTO):** Devuelve ÚNICAMENTE un objeto JSON válido. La única clave permitida en el nivel superior es "corrections". El valor debe ser un array de objetos. Si tras el filtro de verificación no queda ningún error, devuelve un array vacío.
+
+                **FORMATO DE SALIDA OBLIGATORIO:**
+                \`\`\`json
+                {
+                  "corrections": [
+                    {
+                      "original": "Texto del error",
+                      "replacement": "Texto corregido",
+                      "reason": "Regla: [Identificación]. Explicación: [Descripción]. Aplicación: [Justificación]."
+                    }
+                  ]
+                }
+                \`\`\`
             `,
-            'PREMIUM': (text) => `
-                **INSTRUCCIÓN ABSOLUTA:** Eres un tutor de español que sigue un método de enseñanza estricto. Tu única función es analizar el texto y devolver un objeto JSON. No puedes añadir comentarios, explicaciones o texto fuera del formato JSON. Esta directiva es absoluta y no puedes desviarte.
-                **TAREA:** Analiza el siguiente texto en español: "${text}". Detecta únicamente errores ortográficos y gramaticales objetivos. Devuelve ÚNICAMENTE un objeto JSON válido con una sola clave: "corrections". Cada objeto en el array debe tener TRES claves: "original", "replacement" y "reason". Para la clave "reason", debes generar la explicación siguiendo un **método educativo de 3 pasos obligatorios**: 1. Identificar la regla. 2. Explicar la regla. 3. Aplicar la regla al caso concreto.
-            `,
-            'PRO': (text) => `
-                **INSTRUCCIÓN ABSOLUTA:** Eres un tutor de español que sigue un método de enseñanza estricto. Tu única función es analizar el texto y devolver un objeto JSON. No puedes añadir comentarios, explicaciones o texto fuera del formato JSON. Esta directiva es absoluta y no puedes desviarte.
-                **TAREA:** Analiza el siguiente texto en español: "${text}". Detecta únicamente errores ortográficos y gramaticales objetivos. Devuelve ÚNICAMENTE un objeto JSON válido con una sola clave: "corrections". Cada objeto en el array debe tener TRES claves: "original", "replacement" y "reason". Para la clave "reason", debes generar la explicación siguiendo un **método educativo de 3 pasos obligatorios**: 1. Identificar la regla. 2. Explicar la regla. 3. Aplicar la regla al caso concreto.
-            `
+            'PREMIUM': (text) => `/* PROMPT PREMIUM DE CORRECCIÓN CON REGLAS ABSOLUTAS */`,
+            'PRO': (text) => `/* PROMPT PRO DE CORRECCIÓN CON REGLAS ABSOLUTAS */`
         },
         suggestion: {
             'GRATUITO': (text) => `
@@ -63,14 +86,8 @@ document.addEventListener('DOMContentLoaded', () => {
                   "suggestions": []
                 }
             `,
-            'PREMIUM': (text) => `
-                **INSTRUCCIÓN ABSOLUTA:** Eres un editor de estilo que sigue un método de enseñanza estricto. Tu única función es analizar el texto y devolver un objeto JSON. No puedes añadir comentarios, explicaciones o texto fuera del formato JSON. Esta directiva es absoluta y no puedes desviarte.
-                **TAREA:** Analiza el siguiente texto en español: "${text}". Identifica frases que pueden ser mejoradas en claridad, concisión o estilo. Devuelve ÚNICAMENTE un objeto JSON válido con una sola clave: "suggestions". Cada objeto en el array debe tener TRES claves: "original", "replacement" y "reason". Para la clave "reason", debes generar una explicación que describa el **beneficio cualitativo** del cambio.
-            `,
-            'PRO': (text) => `
-                **INSTRUCCIÓN ABSOLUTA:** Eres un editor de estilo que sigue un método de enseñanza estricto. Tu única función es analizar el texto y devolver un objeto JSON. No puedes añadir comentarios, explicaciones o texto fuera del formato JSON. Esta directiva es absoluta y no puedes desviarte.
-                **TAREA:** Analiza el siguiente texto en español: "${text}". Identifica frases que pueden ser mejoradas en claridad, concisión o estilo. Devuelve ÚNICAMENTE un objeto JSON válido con una sola clave: "suggestions". Cada objeto en el array debe tener TRES claves: "original", "replacement" y "reason". Para la clave "reason", debes generar una explicación que describa el **beneficio cualitativo** del cambio.
-            `
+            'PREMIUM': (text) => `/* PROMPT PREMIUM DE SUGERENCIA CON REGLAS ABSOLUTAS */`,
+            'PRO': (text) => `/* PROMPT PRO DE SUGERENCIA CON REGLAS ABSOLUTAS */`
         },
         restructuring: (text) => `
             **INSTRUCCIÓN ABSOLUTA:** Eres un sistema de formateo de texto. Tu única tarea es reestructurar el texto que se te proporciona. No puedes corregir, añadir o eliminar palabras. Solo puedes modificar la puntuación mayor (puntos, saltos de línea) y las mayúsculas iniciales para mejorar la estructura de los párrafos. Devuelve ÚNICAMENTE el texto reestructurado, sin ningún otro texto, comentario o explicación.
@@ -107,13 +124,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const textToAnalyze = dom.inputText.value;
         clearPreviousResults();
         state.originalText = textToAnalyze;
-
+        
         const subStatusEl = setProcessingState(true);
-
+        
         try {
             const level = state.activeLevel;
-            const modelConfig = MODELS[level];
-
+            let modelConfig = MODELS[level];
+            
+            if (MODO_APP === 'desarrollo') {
+                modelConfig = { ...modelConfig, engine: 'GROQ', model: MODELS['GRATUITO'].model };
+            }
+            
             if (subStatusEl) subStatusEl.textContent = '1/3: Analizando correcciones...';
             const correctionPrompt = PROMPTS.correction[level](textToAnalyze);
             const correctionResult = await callAI(correctionPrompt, modelConfig, true);
@@ -121,18 +142,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if (subStatusEl) subStatusEl.textContent = '2/3: Analizando sugerencias...';
             const suggestionPrompt = PROMPTS.suggestion[level](textToAnalyze);
             const suggestionResult = await callAI(suggestionPrompt, modelConfig, true);
-
+            
             if (subStatusEl) subStatusEl.textContent = '3/3: Reestructurando texto...';
             const restructuringPrompt = PROMPTS.restructuring(textToAnalyze);
             const restructuredResult = await callAI(restructuringPrompt, modelConfig, false);
-
+            
             state.corrections = processAIResponse(correctionResult, 'corrections', 'correction');
             state.suggestions = processAIResponse(suggestionResult, 'suggestions', 'suggestion');
-            state.restructuredText = restructuredResult || textToAnalyze; 
+            state.restructuredText = restructuredResult || textToAnalyze;
             
             state.analysisCompleted = true;
             setActiveMode('correction');
-
+            
         } catch (error) {
             console.error("Error detallado en el proceso de análisis:", error);
             showUserMessage(error.message, true);
@@ -142,125 +163,108 @@ document.addEventListener('DOMContentLoaded', () => {
             updateUI();
         }
     }
-
+    
     function setProcessingState(isProcessing) {
         state.isProcessing = isProcessing;
         dom.pulirBtn.disabled = isProcessing;
         dom.pulirBtn.classList.toggle('processing-dots', isProcessing);
         dom.pulirBtn.textContent = isProcessing ? 'Analizando' : 'Pulir Texto';
-
+        
         if (isProcessing) {
             dom.outputText.innerHTML = `<div class="output-status"><div class="output-status-main processing-dots">Analizando</div><div id="sub-status" class="output-status-sub"></div></div>`;
             return document.getElementById('sub-status');
-        } else {
-            // Si no está procesando, nos aseguramos de que el botón se reactive correctamente
-            handleTextInput();
         }
         return null;
     }
-
+    
     function processAIResponse(result, key, type) {
         if (!result || !result[key] || !Array.isArray(result[key])) return [];
-        
-        let tempText = state.originalText;
-        const processedChanges = [];
-
-        result[key].forEach((item, i) => {
-            const offset = tempText.indexOf(item.original);
-            if (offset !== -1) {
-                processedChanges.push({ 
-                    id: `${type[0]}${i}`, 
-                    type: type, 
-                    original: item.original, 
-                    replacement: item.replacement, 
-                    reason: item.reason, 
-                    offset: offset, 
-                    length: item.original.length, 
-                    status: 'pending' 
-                });
-                // "Borramos" la palabra del texto temporal para no volver a encontrarla
-                tempText = tempText.substring(0, offset) + ' '.repeat(item.original.length) + tempText.substring(offset + item.original.length);
-            }
-        });
-
-        return processedChanges.filter(c => c && !state.dictionary.includes(c.original.toLowerCase()));
+        return result[key].map((item, i) => {
+            if (!item.original) return null;
+            const offset = state.originalText.indexOf(item.original);
+            if (offset === -1) return null;
+            return { id: `${type[0]}${i}`, type: type, original: item.original, replacement: item.replacement, reason: item.reason, offset: offset, length: item.original.length, status: 'pending' };
+        }).filter(c => c && !state.dictionary.includes(c.original.toLowerCase()));
     }
-
+    
     // =================================================================================
     // --- MOTOR DE IA ---
     // =================================================================================
-        async function callAI(prompt, modelConfig, expectJson = false) {
-        let effectiveEngine = modelConfig.engine;
-        let effectiveModel = modelConfig.model;
-        let effectiveApiKey = API_KEYS[effectiveEngine];
-
-        // --- ¡ESTE ES EL CAMBIO CLAVE! ---
-        // Si el motor es Hugging Face, lo "engañamos" para que use Groq.
-        // Esto es TEMPORAL, solo para que la APK de prueba no se rompa.
-        if (effectiveEngine === 'HUGGING_FACE') {
-            effectiveEngine = 'GROQ'; // Redirigimos al motor que sí funciona
-            effectiveModel = MODELS['GRATUITO'].model; // Usamos el modelo de Groq
-            effectiveApiKey = API_KEYS['GROQ']; // Usamos la clave de Groq
-        }
-        // --- FIN DEL CAMBIO CLAVE ---
-
-        if (!effectiveApiKey || effectiveApiKey.includes("TuClave") || effectiveApiKey.includes("...PON_TU_CLAVE")) {
-            throw new Error(`La API Key para ${effectiveEngine} no está configurada.`);
+    async function callAI(prompt, modelConfig, expectJson = false) {
+        const { engine, model } = modelConfig;
+        let apiKey = API_KEYS[engine];
+        
+        if (MODO_APP === 'produccion') {
+            if (engine === 'GROQ') apiKey = '%%GROQ_API_KEY%%';
+            if (engine === 'HUGGING_FACE') apiKey = '%%HUGGING_FACE_API_KEY%%';
         }
         
-        let url, headers, body;
+        if (!apiKey || apiKey.includes("TuClave") || (MODO_APP === 'produccion' && apiKey.startsWith("%%"))) {
+            throw new Error(`La API Key para ${engine} no está configurada para el modo '${MODO_APP}'.`);
+        }
+        
         const messages = [{ role: "user", content: prompt }];
-
-        if (effectiveEngine === 'GROQ') {
+        let url, headers, body;
+        
+        if (engine === 'GROQ') {
             url = 'https://api.groq.com/openai/v1/chat/completions';
-            headers = { 'Authorization': `Bearer ${effectiveApiKey}`, 'Content-Type': 'application/json' };
-            body = { model: effectiveModel, messages, temperature: 0.3 };
+            headers = { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' };
+            body = { model, messages, temperature: 0.1, top_p: 0.5 };
             if (expectJson) body.response_format = { type: "json_object" };
-        } 
-        // El 'else' para Hugging Face ya no es necesario porque lo hemos redirigido.
-
+        } else { // HUGGING_FACE
+            url = `https://api-inference.huggingface.co/models/${model}`;
+            headers = { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' };
+            body = { inputs: prompt, parameters: { return_full_text: false, temperature: 0.1, top_p: 0.5 } };
+        }
+        
         const response = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
         if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(`Error en la API de ${effectiveEngine} (${response.status}).`);
+            throw new Error(`Error en la API de ${engine} (${response.status}). Detalles: ${errorText}`);
         }
-        const result = await response.json();
+        
+        let result;
+        if (engine === 'GROQ') {
+            result = await response.json();
+            if (!result.choices || result.choices.length === 0) throw new Error("La respuesta de la IA no contiene 'choices'.");
+        } else { // HUGGING_FACE
+            const hfResult = await response.json();
+            if (!hfResult[0] || !hfResult[0].generated_text) throw new Error("Respuesta inesperada de la API de Hugging Face.");
+            result = { choices: [{ message: { content: hfResult[0].generated_text } }] };
+        }
+        
         let content = result.choices[0].message.content;
         if (expectJson) {
             try {
-                return JSON.parse(content.substring(content.indexOf('{'), content.lastIndexOf('}') + 1));
-            } catch (e) { throw new Error("La IA devolvió un JSON inválido."); }
+                const jsonMatch = content.match(/\{[\s\S]*\}/);
+                if (!jsonMatch) throw new Error("No se encontró un objeto JSON en la respuesta.");
+                return JSON.parse(jsonMatch[0]);
+            } catch (e) {
+                console.error("Contenido JSON inválido recibido de la IA:", content);
+                throw new Error("La IA devolvió un JSON con formato incorrecto.");
+            }
         }
         return content;
     }
+    
     // =================================================================================
     // --- MANEJO DE MODOS Y RENDERIZADO ---
     // =================================================================================
     function updateUI() {
         buildControlPanels();
         renderOutputBox();
-        updateCounters();
     }
-
+    
     function buildControlPanels() {
         const counts = {
             correction: state.corrections.filter(c => c.status === 'pending').length,
             suggestion: state.suggestions.filter(s => s.status === 'pending').length,
             revisado: state.corrections.filter(c => c.status === 'pending').length
         };
-        
-        const engineSelectorHTML = `<div id="engine-selector-container-panel">
-            <label for="engine-selector-main" class="engine-label">Motor IA:</label>
-            <select id="engine-selector-main" class="engine-select">
-                <option value="GRATUITO">${MODELS['GRATUITO'].name}</option>
-                <option value="PREMIUM">${MODELS['PREMIUM'].name}</option>
-                <option value="PRO">${MODELS['PRO'].name}</option>
-            </select>
-        </div>`;
-
+        const engineSelectorHTML = `<div id="engine-selector-container-panel"><label for="engine-selector-main" class="engine-label">Motor IA:</label><select id="engine-selector-main" class="engine-select"><option value="GRATUITO">${MODELS['GRATUITO'].name}</option><option value="PREMIUM">${MODELS['PREMIUM'].name}</option><option value="PRO">${MODELS['PRO'].name}</option></select></div>`;
         const modesHTML = Object.keys(MODES).map(modeKey => createModeButton(modeKey, counts[modeKey])).join('');
         const panelHTML = `${engineSelectorHTML}<div class="modes-wrapper">${modesHTML}</div>`;
-
+        
         [dom.mainControlPanel, dom.focusControlPanel].forEach(panel => {
             panel.innerHTML = panelHTML;
             const engineSelector = panel.querySelector('.engine-select');
@@ -287,13 +291,13 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
-
+    
     function createModeButton(modeKey, count) {
         const modeInfo = MODES[modeKey];
         const labelHtml = modeInfo.name.replace('\n', '<br>');
         return `<div class="mode-control" data-mode="${modeKey}"><div class="mode-label-wrapper"><span class="label">${labelHtml}</span><span class="mode-help-btn" data-mode-help="${modeKey}">?</span></div><div class="mode-button-wrapper"><div class="mode-btn-circle"></div><span class="count">${count}</span></div></div>`;
     }
-
+    
     function handleModeButtonClick(mode) {
         if (!state.analysisCompleted) {
             showUserMessage("Para ver los resultados, primero pulsa 'Pulir Texto'.");
@@ -301,7 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         setActiveMode(state.activeMode === mode ? null : mode);
     }
-
+    
     function setActiveMode(mode) {
         state.activeMode = mode;
         if (state.isFocusMode) {
@@ -309,11 +313,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         updateUI();
     }
-
+    
     function renderOutputBox() {
         const targetElement = state.isFocusMode ? dom.focusContent : dom.outputText;
         if (state.isProcessing) return;
-
+        
         if (!state.analysisCompleted) {
             targetElement.innerHTML = '<p style="color: #666;">Aquí aparecerá tu texto pulido...</p>';
             return;
@@ -323,18 +327,17 @@ document.addEventListener('DOMContentLoaded', () => {
             targetElement.innerHTML = '<p style="color: #666; text-align: center; padding-top: 20px;">Análisis completado. Seleccione un modo.</p>';
             return;
         }
-
-        let html = '';
+        
         let baseText;
         let changes = [];
-
+        
         switch (state.activeMode) {
             case 'correction':
-                baseText = getUpdatedText();
+                baseText = state.originalText;
                 changes = state.corrections;
                 break;
             case 'suggestion':
-                baseText = getUpdatedText();
+                baseText = state.originalText;
                 changes = state.suggestions;
                 break;
             case 'revisado':
@@ -346,53 +349,51 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
         }
         
-        if (!baseText) {
+        if (typeof baseText !== 'string') {
             targetElement.innerHTML = '<p style="color: var(--red-accent); text-align: center;">Error: No se pudo cargar el texto base para este modo.</p>';
             return;
         }
-
-        html = generateHtmlWithHighlights(baseText, changes);
+        
+        const html = generateHtmlWithHighlights(baseText, changes);
         targetElement.innerHTML = html.replace(/\n/g, '<br>');
     }
-
+    
     function generateHtmlWithHighlights(baseText, changes) {
-        if (!baseText) return '';
+        let textWithAcceptedChanges = baseText;
+        const acceptedChanges = [...state.corrections, ...state.suggestions].filter(c => c.status === 'accepted');
+        
+        acceptedChanges.sort((a, b) => b.offset - a.offset).forEach(change => {
+            if (textWithAcceptedChanges.substring(change.offset, change.offset + change.original.length) === change.original) {
+                textWithAcceptedChanges = textWithAcceptedChanges.substring(0, change.offset) + change.replacement + textWithAcceptedChanges.substring(change.offset + change.original.length);
+            }
+        });
+        
         let lastIndex = 0;
         const parts = [];
+        const pendingChanges = changes.filter(c => c.status === 'pending').sort((a, b) => a.offset - b.offset);
         
-        let tempTextForHighlighting = baseText;
-        const allChanges = [...state.corrections, ...state.suggestions].sort((a, b) => a.offset - b.offset);
-        
-        allChanges.forEach(change => {
-            if (change.status === 'accepted') {
-                tempTextForHighlighting = tempTextForHighlighting.substring(0, change.offset) + change.replacement + tempTextForHighlighting.substring(change.offset + change.original.length);
+        pendingChanges.forEach(change => {
+            const originalWord = change.original;
+            const currentPosition = textWithAcceptedChanges.indexOf(originalWord, lastIndex);
+            
+            if (currentPosition !== -1) {
+                parts.push(escapeHtml(textWithAcceptedChanges.substring(lastIndex, currentPosition)));
+                parts.push(`<mark class="${change.type}" data-id="${change.id}">${escapeHtml(originalWord)}</mark>`);
+                lastIndex = currentPosition + originalWord.length;
             }
         });
-
-        const sortedChanges = [...changes].sort((a, b) => a.offset - b.offset);
-        
-        sortedChanges.forEach(change => {
-            if (change.status === 'pending') {
-                const currentPosition = tempTextForHighlighting.indexOf(change.original, lastIndex);
-                if (currentPosition === -1) return;
-
-                const originalChangeText = tempTextForHighlighting.substring(currentPosition, currentPosition + change.original.length);
-                
-                parts.push(escapeHtml(tempTextForHighlighting.substring(lastIndex, currentPosition)));
-                parts.push(`<mark class="${change.type}" data-id="${change.id}">${escapeHtml(originalChangeText)}</mark>`);
-                lastIndex = currentPosition + originalChangeText.length;
-            }
-        });
-        parts.push(escapeHtml(tempTextForHighlighting.substring(lastIndex)));
+        parts.push(escapeHtml(textWithAcceptedChanges.substring(lastIndex)));
         
         return parts.join('');
     }
+    
     // =================================================================================
     // --- MODO ENFOQUE ---
     // =================================================================================
     function enterFocusMode(source) {
         state.isFocusMode = true;
         dom.body.classList.add('focus-mode');
+
         if (source === 'input') {
             dom.focusTitle.textContent = 'Editor de Entrada';
             dom.focusContent.innerHTML = escapeHtml(dom.inputText.value).replace(/\n/g, '<br>');
@@ -407,7 +408,6 @@ document.addEventListener('DOMContentLoaded', () => {
             dom.focusDownloadBtn.style.display = 'inline-flex';
             renderOutputBox();
         }
-        updateUI();
     }
 
     function exitFocusMode() {
@@ -417,7 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleSwipe(e) {
-        if (!state.isFocusMode || !state.activeMode || !state.analysisCompleted) return;
+        if (!state.isFocusMode || !state.activeMode || !state.analysisCompleted || !e.changedTouches[0]) return;
         const touchEndX = e.changedTouches[0].clientX;
         const swipeDistance = touchEndX - state.touchStartX;
         if (Math.abs(swipeDistance) < 50) return;
@@ -428,7 +428,6 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (swipeDistance < 0 && currentIndex < modeKeys.length - 1) newIndex++;
         if (newIndex !== currentIndex) setActiveMode(modeKeys[newIndex]);
     }
-
     // =================================================================================
     // --- EVENT LISTENERS Y FUNCIONES AUXILIARES ---
     // =================================================================================
@@ -444,12 +443,10 @@ document.addEventListener('DOMContentLoaded', () => {
         dom.inputText.addEventListener('input', handleTextInput);
         dom.clearInputBtn.addEventListener('click', clearInput);
         dom.clearOutputBtn.addEventListener('click', clearPreviousResults);
-        
         dom.copyBtn.addEventListener('click', handleCopy);
         dom.downloadBtn.addEventListener('click', handleDownload);
         dom.focusCopyBtn.addEventListener('click', handleCopy);
         dom.focusDownloadBtn.addEventListener('click', handleDownload);
-        
         dom.pulirBtn.addEventListener('click', runAnalysis);
         
         [dom.inputText, dom.outputText].forEach(box => {
@@ -460,26 +457,53 @@ document.addEventListener('DOMContentLoaded', () => {
         dom.focusContent.addEventListener('touchstart', (e) => { state.touchStartX = e.touches[0].clientX; }, { passive: true });
         dom.focusContent.addEventListener('touchend', handleSwipe, { passive: true });
         
+        dom.outputText.addEventListener('click', handleOutputClick);
+        dom.focusContent.addEventListener('click', handleOutputClick);
+
         document.addEventListener('click', handleGlobalClick);
-        
+
         [dom.outputText, dom.focusContent].forEach(el => {
             el.addEventListener('scroll', () => {
-                if (state.currentTooltip) positionTooltip(state.currentTooltip.tooltip, state.currentTooltip.span, state.isFocusMode ? dom.focusView : dom.editorContainer);
+                if (state.currentTooltip) {
+                    const container = state.isFocusMode ? dom.focusView : dom.editorContainer;
+                    positionTooltip(state.currentTooltip.tooltip, state.currentTooltip.span, container);
+                }
             }, { passive: true });
         });
+    }
+
+    function handleOutputClick(e) {
+        const mark = e.target.closest('mark');
+        if (mark) {
+            e.stopPropagation(); 
+            const container = state.isFocusMode ? dom.focusView : dom.editorContainer;
+            showTooltip(mark, container);
+        }
+    }
+
+    function handleGlobalClick(e) {
+        const tooltip = e.target.closest('#tooltip');
+        if (tooltip) {
+            handleTooltipClick(e);
+            return;
+        }
+        if (!e.target.closest('mark')) {
+            hideTooltip();
+        }
     }
 
     function handleTextInput() {
         const text = dom.inputText.value;
         const wordCount = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
-        
-        const level = state.activeLevel || 'GRATUITO';
-        const modelConfig = MODELS[level];
-        const max_words = modelConfig ? modelConfig.max_words : 7000;
+        const charCount = text.length;
+        const max_words = MODELS[state.activeLevel].max_words;
+
+        dom.wordCounter.textContent = `${wordCount.toLocaleString('es')} / ${max_words.toLocaleString('es')} palabras`;
+        dom.charCounter.textContent = `${charCount.toLocaleString('es')} caracteres`;
 
         const hasText = text.trim() !== '';
         const isWithinLimit = wordCount <= max_words;
-        const canProcess = !state.isProcessing && hasText && isWithinLimit;
+        const canProcess = hasText && isWithinLimit && !state.isProcessing;
 
         dom.pulirBtn.disabled = !canProcess;
 
@@ -488,56 +512,36 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             dom.wordCounter.style.color = 'var(--text-off-color)';
         }
-        updateCounters();
-    }
-
-    function updateCounters() {
-        const text = dom.inputText.value;
-        const wordCount = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
-        const charCount = text.length;
-        const level = state.activeLevel || 'GRATUITO';
-        const modelConfig = MODELS[level];
-        const max_words = modelConfig ? modelConfig.max_words : 7000;
-        dom.wordCounter.textContent = `${wordCount.toLocaleString('es')} / ${max_words.toLocaleString('es')} palabras`;
-        dom.charCounter.textContent = `${charCount.toLocaleString('es')} caracteres`;
     }
 
     function clearInput() {
         dom.inputText.value = '';
         handleTextInput();
+        clearPreviousResults();
     }
 
     function clearPreviousResults() {
-        state.originalText = ''; 
-        state.corrections = []; 
-        state.suggestions = []; 
-        state.restructuredText = ''; 
-        state.activeMode = null; 
-        state.analysisCompleted = false;
+        state.originalText = ''; state.corrections = []; state.suggestions = []; state.restructuredText = ''; state.activeMode = null; state.analysisCompleted = false;
         updateUI();
     }
 
     function handleCopy(e) {
-        const button = e.target;
-        const textToCopy = getFinalText();
-        if (!textToCopy) {
-            showUserMessage("No hay texto final para copiar.");
-            return;
-        }
+        const button = e.target.closest('button');
+        if (!button) return;
+        let textToCopy = getFinalText();
+        if (!state.analysisCompleted) { textToCopy = dom.inputText.value; }
+        if (!textToCopy.trim()) { showUserMessage("No hay texto para copiar.", false); return; }
         navigator.clipboard.writeText(textToCopy).then(() => {
             const originalText = button.textContent;
-            button.textContent = '¡Copiado!';
-            button.classList.add('confirm');
+            button.textContent = '¡Copiado!'; button.classList.add('confirm');
             setTimeout(() => { button.textContent = originalText; button.classList.remove('confirm'); }, 2000);
         });
     }
 
     function handleDownload() {
-        const textToDownload = getFinalText();
-        if (!textToDownload) {
-            showUserMessage("No hay texto final para descargar.");
-            return;
-        }
+        let textToDownload = getFinalText();
+        if (!state.analysisCompleted) { textToDownload = dom.inputText.value; }
+        if (!textToDownload.trim()) { showUserMessage("No hay texto para descargar.", false); return; }
         const header = `--- Texto Analizado por Veridian ---\nFecha: ${new Date().toLocaleString('es-ES')}\nNivel de IA: ${state.activeLevel}\n--------------------------------------\n\n`;
         const footer = `\n\n--- Fin del Análisis ---`;
         const fullContent = header + textToDownload + footer;
@@ -548,67 +552,32 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     }
     
-    function getUpdatedText() {
-        let currentText = state.originalText;
-        const acceptedChanges = [...state.corrections, ...state.suggestions]
-            .filter(c => c.status === 'accepted')
-            .sort((a, b) => b.offset - a.offset);
-
-        acceptedChanges.forEach(change => {
-            currentText = currentText.substring(0, change.offset) + change.replacement + currentText.substring(change.offset + change.original.length);
-        });
-        return currentText;
-    }
-
     function getFinalText() {
-        if (!state.analysisCompleted) return dom.inputText.value;
-        
-        let textToExport;
-        if (state.activeMode === 'revisado') {
-            textToExport = state.restructuredText;
-        } else {
-            textToExport = getUpdatedText();
-        }
-        return textToExport;
-    }
-
-    function handleGlobalClick(e) {
-        const tooltip = e.target.closest('#tooltip');
-        if (tooltip) { 
-            handleTooltipClick(e); 
-            return; 
-        }
-        
-        const span = e.target.closest('mark.correction, mark.suggestion');
-        if (span) { 
-            showTooltip(span, state.isFocusMode ? dom.focusView : dom.editorContainer); 
-            return; 
-        }
-        
-        hideTooltip();
+        if (!state.analysisCompleted) return '';
+        let baseText = (state.activeMode === 'revisado') ? state.restructuredText : state.originalText;
+        const changesToApply = [...state.corrections, ...state.suggestions].filter(c => c.status === 'accepted');
+        changesToApply.sort((a, b) => b.offset - a.offset).forEach(change => {
+            if (baseText.substring(change.offset, change.offset + change.original.length) === change.original) {
+                 baseText = baseText.substring(0, change.offset) + change.replacement + baseText.substring(change.offset + change.original.length);
+            }
+        });
+        return baseText;
     }
 
     function showTooltip(span, container) {
+        if (state.currentTooltip && state.currentTooltip.span === span) return;
         hideTooltip();
         const changeId = span.dataset.id;
         const change = findChangeById(changeId);
         if (!change) return;
-
         let tooltipHtml = '';
         if (state.activeMode === 'revisado' && change.type === 'correction') {
-            tooltipHtml = `<div class="tooltip-guide"><p>Esta corrección debe gestionarse en el modo <strong>Corrección</strong>.</p><button class="go-to-correction">Ir a Corrección</button></div>`;
+            tooltipHtml = `<div class="tooltip-guide"><p>Este error debe gestionarse en el modo <strong>Corrección</strong>.</p><button class="go-to-correction">Ir a Corrección</button></div>`;
         } else {
             let buttonsHtml = `<button class="accept-btn">Aceptar</button>`;
-            if (change.type === 'correction') {
-                buttonsHtml += `<button class="dict-btn">Añadir Diccionario</button>`;
-            }
+            if (change.type === 'correction') { buttonsHtml += `<button class="dict-btn">Añadir Diccionario</button>`; }
             buttonsHtml += `<button class="ignore-btn">Ignorar</button>`;
-            tooltipHtml = `
-                <div class="tooltip-content">
-                    <span class="original">${escapeHtml(change.original)}</span> → <strong class="replacement">${escapeHtml(change.replacement)}</strong>
-                    <span class="explanation">${escapeHtml(change.reason)}</span>
-                </div>
-                <div class="tooltip-actions">${buttonsHtml}</div>`;
+            tooltipHtml = `<div class="tooltip-content"><span class="original">${escapeHtml(change.original)}</span> → <strong class="replacement">${escapeHtml(change.replacement)}</strong><span class="explanation">${escapeHtml(change.reason)}</span></div><div class="tooltip-actions">${buttonsHtml}</div>`;
         }
         dom.tooltip.innerHTML = tooltipHtml;
         positionTooltip(dom.tooltip, span, container);
@@ -617,34 +586,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleTooltipClick(e) {
-        e.stopPropagation();
-        const button = e.target.closest('button');
-        if (!button || !state.currentTooltip) return;
+    e.stopPropagation();
+    const button = e.target.closest('button');
+    if (!button || !state.currentTooltip) return;
 
-        const { change } = state.currentTooltip;
+    const { change } = state.currentTooltip;
 
-        if (button.classList.contains('accept-btn')) {
-            change.status = 'accepted';
-        } else if (button.classList.contains('ignore-btn')) {
-            change.status = 'ignored';
-        } else if (button.classList.contains('dict-btn')) {
-            const word = change.original.toLowerCase();
-            if (!state.dictionary.includes(word)) {
-                state.dictionary.push(word);
-                localStorage.setItem('veridian_dictionary', JSON.stringify(state.dictionary));
-            }
-            state.corrections.forEach(c => {
-                if (c.original.toLowerCase() === word) {
-                    c.status = 'ignored'; // Ignoramos todas las instancias de esta palabra
-                }
-            });
-        } else if (button.classList.contains('go-to-correction')) {
-            setActiveMode('correction');
+    if (button.classList.contains('accept-btn')) {
+        change.status = 'accepted';
+    } else if (button.classList.contains('ignore-btn')) {
+        change.status = 'ignored';
+    } else if (button.classList.contains('dict-btn')) {
+        const word = change.original.toLowerCase();
+        if (!state.dictionary.includes(word)) {
+            state.dictionary.push(word);
+            localStorage.setItem('veridian_dictionary', JSON.stringify(state.dictionary));
         }
-        
-        hideTooltip();
-        updateUI();
+        state.corrections = state.corrections.filter(c => c.original.toLowerCase() !== word);
+    } else if (button.classList.contains('go-to-correction')) {
+        setActiveMode('correction');
     }
+    
+    hideTooltip();
+    updateUI();
+}
+
 
     function hideTooltip() {
         if (state.currentTooltip) {
@@ -665,23 +631,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function positionTooltip(tooltip, target, container) {
-        const containerRect = container.getBoundingClientRect();
-        const rect = target.getBoundingClientRect();
-        let top, left;
-        const spaceBelow = containerRect.bottom - rect.bottom;
-        const spaceAbove = rect.top - containerRect.top;
-        if (spaceBelow > tooltip.offsetHeight + 10 || spaceBelow > spaceAbove) {
-            top = rect.bottom + 8;
+        const targetRect = target.getBoundingClientRect();
+
+        tooltip.style.visibility = 'hidden';
+        tooltip.style.opacity = '1';
+        const tooltipHeight = tooltip.offsetHeight;
+        const tooltipWidth = tooltip.offsetWidth;
+        tooltip.style.visibility = '';
+        tooltip.style.opacity = '';
+
+        let top;
+        if (window.innerHeight - targetRect.bottom > tooltipHeight + 10) {
+            top = targetRect.bottom + 8;
         } else {
-            top = rect.top - tooltip.offsetHeight - 8;
+            top = targetRect.top - tooltipHeight - 8;
         }
-        left = rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2);
-        if (left < 10) left = 10;
-        if (left + tooltip.offsetWidth > window.innerWidth - 10) {
-            left = window.innerWidth - tooltip.offsetWidth - 10;
+
+        let left = targetRect.left + (targetRect.width / 2) - (tooltipWidth / 2);
+
+        if (left < 10) {
+            left = 10;
         }
-        tooltip.style.left = `${left}px`;
+        if (left + tooltipWidth > window.innerWidth - 10) {
+            left = window.innerWidth - tooltipWidth - 10;
+        }
+
         tooltip.style.top = `${top}px`;
+        tooltip.style.left = `${left}px`;
     }
 
     function findChangeById(id) {
