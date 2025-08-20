@@ -1,4 +1,4 @@
-name: Build Veridian (VICTORIA FINAL)
+name: Build Veridian (PLAN D - CONEXIÓN DIRECTA)
 
 on:
   push:
@@ -33,9 +33,9 @@ jobs:
       - name: 'PASO 5: Añadiendo la última plataforma Android...'
         run: cordova platform add android
 
-      # PASO 5.5 (LA PIEZA FINAL): Usando el plugin moderno para el sistema moderno.
-      - name: 'PASO 5.5: Instalando el plugin Allow List...'
-        run: cordova plugin add cordova-plugin-allow-list
+      # PASO 5.5 (PLAN D): Instalando el plugin directamente desde GitHub.
+      - name: 'PASO 5.5: Instalando el plugin Allow List (Directo)...'
+        run: cordova plugin add https://github.com/apache/cordova-plugin-allow-list.git
 
       - name: 'PASO 6: CONSTRUYENDO EL APK...'
         run: cordova build android --debug
