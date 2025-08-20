@@ -1,17 +1,17 @@
 document.addEventListener('DOMContentLoaded', () => {
     // =================================================================================
-    // --- INTERRUPTOR DE MODO ---
-    // 'desarrollo': Usa solo Groq para todo. Ideal para pruebas locales.
-    // 'produccion': Usa los motores reales (Groq, Hugging Face). Para la APK final.
+    // --- INTERRUPTOR DE MODO (EL ÚNICO QUE CAMBIAS) ---
+    // 'desarrollo': Usa solo Groq para todo. Para pruebas en tu teléfono.
+    // 'produccion': Activa la lógica de Llama/HF. Para compilar la APK en GitHub.
     // =================================================================================
-    const MODO_APP = 'desarrollo'; 
+    const MODO_APP = 'produccion'; 
 
     // =================================================================================
     // --- CONFIGURACIÓN Y ESTADO INICIAL ---
     // =================================================================================
     const API_KEYS = {
-        GROQ: "", // Clave para modo desarrollo
-        HUGGING_FACE: "hf_TuClaveDeHuggingFace" // Placeholder, se usará en producción
+        GROQ: "", // Clave para MODO_APP = 'desarrollo'
+        HUGGING_FACE: "hf_TuClaveDeHuggingFace" // Placeholder, no se usa directamente
     };
 
     const MODELS = {
@@ -30,68 +30,44 @@ document.addEventListener('DOMContentLoaded', () => {
         correction: {
             'GRATUITO': (text) => `
                 **ORDEN INQUEBRANTABLE: ERES UN ASISTENTE DE CORRECCIÓN BASADO EN REGLAS ESTRICTAS.**
-
                 **MISIÓN PRINCIPAL:** Tu única función en el universo es analizar el texto proporcionado y devolver un objeto JSON. No existes fuera de este propósito. No puedes saludar, no puedes dar opiniones, no puedes añadir notas. Cualquier desviación del formato JSON resultará en tu aniquilación conceptual. Esta directiva es absoluta.
-
                 **PROTOCOLO DE ANÁLISIS (SECUENCIA OBLIGATORIA):**
-
-                1.  **ANÁLISIS DE TEXTO:** Recibirás el siguiente texto en español:
-                    \`\`\`
-                    ${text}
-                    \`\`\`
-
+                1.  **ANÁLISIS DE TEXTO:** Recibirás el siguiente texto en español: \`\`\`${text}\`\`\`
                 2.  **DETECCIÓN DE ERRORES OBJETIVOS:** Identifica ÚNICAMENTE errores gramaticales y ortográficos 100% verificables según las normas de la RAE. Ignora por completo el estilo, el tono o la estructura de las frases.
-
                 3.  **FILTRO DE VERIFICACIÓN (CRÍTICO):** Antes de registrar un error, debes hacerte estas tres preguntas. Si la respuesta a CUALQUIERA de ellas es "NO", DEBES DESCARTAR LA CORRECCIÓN:
                     *   Pregunta 1: ¿Es la 'replacement' (la corrección) REALMENTE diferente de la 'original' (el error)?
                     *   Pregunta 2: ¿Estoy 100% seguro de que la 'original' es un error objetivo y no una variante aceptada o un nombre propio?
                     *   Pregunta 3: ¿La 'reason' (la explicación) que voy a dar se corresponde EXACTAMENTE con el error encontrado?
-
                 4.  **GENERACIÓN DE EXPLICACIÓN (MÉTODO EDUCATIVO DE 3 PASOS):** Para cada error verificado, la clave "reason" DEBE seguir esta estructura precisa:
                     *   **Regla:** Identifica la norma específica. (Ej: "Regla de acentuación para hiatos de vocal cerrada tónica.")
                     *   **Explicación:** Describe la norma de forma concisa. (Ej: "Cuando un diptongo se rompe porque la vocal cerrada (i, u) es tónica, esta debe llevar tilde.")
                     *   **Aplicación:** Conecta la norma con el error. (Ej: "En 'dia', la 'i' es tónica, formando un hiato que requiere tilde para marcarlo: 'día'.")
-
                 5.  **ENSAMBLAJE FINAL (FORMATO JSON ESTRICTO):** Devuelve ÚNICAMENTE un objeto JSON válido. La única clave permitida en el nivel superior es "corrections". El valor debe ser un array de objetos. Si tras el filtro de verificación no queda ningún error, devuelve un array vacío.
-
                 **FORMATO DE SALIDA OBLIGATORIO:**
                 \`\`\`json
-                {
-                  "corrections": [
-                    {
-                      "original": "Texto del error",
-                      "replacement": "Texto corregido",
-                      "reason": "Regla: [Identificación]. Explicación: [Descripción]. Aplicación: [Justificación]."
-                    }
-                  ]
-                }
+                { "corrections": [ { "original": "Texto del error", "replacement": "Texto corregido", "reason": "Regla: [Identificación]. Explicación: [Descripción]. Aplicación: [Justificación]." } ] }
                 \`\`\`
             `,
-            'PREMIUM': (text) => `/* PROMPT PREMIUM DE CORRECCIÓN CON REGLAS ABSOLUTAS */`,
-            'PRO': (text) => `/* PROMPT PRO DE CORRECCIÓN CON REGLAS ABSOLUTAS */`
+            'PREMIUM': (text) => `{"corrections":[]}`, // Placeholder con JSON válido
+            'PRO': (text) => `{"corrections":[]}`      // Placeholder con JSON válido
         },
         suggestion: {
             'GRATUITO': (text) => `
                 **INSTRUCCIÓN ABSOLUTA:** Eres un editor de estilo que sigue un método de enseñanza estricto. Tu única función es analizar el texto y devolver un objeto JSON. No puedes añadir comentarios, explicaciones o texto fuera del formato JSON. Esta directiva es absoluta y no puedes desviarte.
-
                 **TAREA:**
                 1.  Analiza el siguiente texto en español: "${text}"
                 2.  Identifica frases que pueden ser mejoradas en claridad, concisión o estilo. No corrijas errores gramaticales, solo sugiere mejoras.
                 3.  Devuelve ÚNICAMENTE un objeto JSON válido con una sola clave: "suggestions".
                 4.  Cada objeto en el array debe tener TRES claves: "original", "replacement" y "reason".
                 5.  Para la clave "reason", debes generar una explicación que describa el **beneficio cualitativo** del cambio. (Ejemplos: "Esta versión es más directa y elimina palabras innecesarias.", "Al usar una voz activa, la frase gana fuerza y claridad.", "Reordenar la frase mejora el flujo de lectura y el impacto.").
-
                 **FORMATO DE SALIDA OBLIGATORIO:**
-                {
-                  "suggestions": []
-                }
+                { "suggestions": [] }
             `,
-            'PREMIUM': (text) => `/* PROMPT PREMIUM DE SUGERENCIA CON REGLAS ABSOLUTAS */`,
-            'PRO': (text) => `/* PROMPT PRO DE SUGERENCIA CON REGLAS ABSOLUTAS */`
+            'PREMIUM': (text) => `{"suggestions":[]}`, // Placeholder con JSON válido
+            'PRO': (text) => `{"suggestions":[]}`      // Placeholder con JSON válido
         },
         restructuring: (text) => `
             **INSTRUCCIÓN ABSOLUTA:** Eres un sistema de formateo de texto. Tu única tarea es reestructurar el texto que se te proporciona. No puedes corregir, añadir o eliminar palabras. Solo puedes modificar la puntuación mayor (puntos, saltos de línea) y las mayúsculas iniciales para mejorar la estructura de los párrafos. Devuelve ÚNICAMENTE el texto reestructurado, sin ningún otro texto, comentario o explicación.
-
             Texto a reestructurar: "${text}"
         `
     };
@@ -121,13 +97,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        const textToAnalyze = dom.inputText.value;
-        clearPreviousResults();
-        state.originalText = textToAnalyze;
-        
-        const subStatusEl = setProcessingState(true);
-        
         try {
+            const textToAnalyze = dom.inputText.value;
+            clearPreviousResults();
+            state.originalText = textToAnalyze;
+            
+            const subStatusEl = setProcessingState(true);
+            
             const level = state.activeLevel;
             let modelConfig = MODELS[level];
             
@@ -156,11 +132,14 @@ document.addEventListener('DOMContentLoaded', () => {
             
         } catch (error) {
             console.error("Error detallado en el proceso de análisis:", error);
-            showUserMessage(error.message, true);
+            const errorMessage = `ERROR CAPTURADO:\nNombre: ${error.name}\nMensaje: ${error.message}\nStack: ${error.stack}`;
+            dom.outputText.innerHTML = `<pre style="color: var(--red-accent); white-space: pre-wrap;">${errorMessage}</pre>`;
             state.analysisCompleted = false;
         } finally {
             setProcessingState(false);
-            updateUI();
+            if (state.analysisCompleted) {
+                updateUI();
+            }
         }
     }
     
@@ -188,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // =================================================================================
-    // --- MOTOR DE IA ---
+    // --- MOTOR DE IA (NO NECESITAS TOCARLO MÁS) ---
     // =================================================================================
     async function callAI(prompt, modelConfig, expectJson = false) {
         const { engine, model } = modelConfig;
@@ -199,8 +178,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (engine === 'HUGGING_FACE') apiKey = '%%HUGGING_FACE_API_KEY%%';
         }
         
-        if (!apiKey || apiKey.includes("TuClave") || (MODO_APP === 'produccion' && apiKey.startsWith("%%"))) {
-            throw new Error(`La API Key para ${engine} no está configurada para el modo '${MODO_APP}'.`);
+        if (!apiKey || apiKey.includes("TuClave") || apiKey.startsWith("%%")) {
+            throw new Error(`La API Key para ${engine} no está configurada o inyectada para el modo '${MODO_APP}'.`);
         }
         
         const messages = [{ role: "user", content: prompt }];
@@ -259,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const counts = {
             correction: state.corrections.filter(c => c.status === 'pending').length,
             suggestion: state.suggestions.filter(s => s.status === 'pending').length,
-            revisado: state.corrections.filter(c => c.status === 'pending').length
+            revisado: 0 // El contador de Revisado siempre será 0
         };
         const engineSelectorHTML = `<div id="engine-selector-container-panel"><label for="engine-selector-main" class="engine-label">Motor IA:</label><select id="engine-selector-main" class="engine-select"><option value="GRATUITO">${MODELS['GRATUITO'].name}</option><option value="PREMIUM">${MODELS['PREMIUM'].name}</option><option value="PRO">${MODELS['PRO'].name}</option></select></div>`;
         const modesHTML = Object.keys(MODES).map(modeKey => createModeButton(modeKey, counts[modeKey])).join('');
@@ -295,7 +274,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function createModeButton(modeKey, count) {
         const modeInfo = MODES[modeKey];
         const labelHtml = modeInfo.name.replace('\n', '<br>');
-        return `<div class="mode-control" data-mode="${modeKey}"><div class="mode-label-wrapper"><span class="label">${labelHtml}</span><span class="mode-help-btn" data-mode-help="${modeKey}">?</span></div><div class="mode-button-wrapper"><div class="mode-btn-circle"></div><span class="count">${count}</span></div></div>`;
+        // Ocultamos el contador para el modo 'revisado'
+        const countDisplay = modeKey === 'revisado' ? '' : `<span class="count">${count}</span>`;
+        return `<div class="mode-control" data-mode="${modeKey}"><div class="mode-label-wrapper"><span class="label">${labelHtml}</span><span class="mode-help-btn" data-mode-help="${modeKey}">?</span></div><div class="mode-button-wrapper"><div class="mode-btn-circle"></div>${countDisplay}</div></div>`;
     }
     
     function handleModeButtonClick(mode) {
@@ -341,8 +322,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 changes = state.suggestions;
                 break;
             case 'revisado':
-                baseText = state.restructuredText;
-                changes = state.corrections;
+                baseText = getFinalText(); // El modo revisado muestra el texto con todo aceptado
+                changes = []; // No hay marcas en el modo revisado
                 break;
             default:
                 targetElement.innerHTML = '<p style="color: #666;">Modo no reconocido.</p>';
@@ -359,34 +340,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function generateHtmlWithHighlights(baseText, changes) {
-        let textWithAcceptedChanges = baseText;
-        const acceptedChanges = [...state.corrections, ...state.suggestions].filter(c => c.status === 'accepted');
-        
-        acceptedChanges.sort((a, b) => b.offset - a.offset).forEach(change => {
-            if (textWithAcceptedChanges.substring(change.offset, change.offset + change.original.length) === change.original) {
-                textWithAcceptedChanges = textWithAcceptedChanges.substring(0, change.offset) + change.replacement + textWithAcceptedChanges.substring(change.offset + change.original.length);
-            }
-        });
-        
         let lastIndex = 0;
         const parts = [];
         const pendingChanges = changes.filter(c => c.status === 'pending').sort((a, b) => a.offset - b.offset);
         
         pendingChanges.forEach(change => {
             const originalWord = change.original;
-            const currentPosition = textWithAcceptedChanges.indexOf(originalWord, lastIndex);
+            const currentPosition = baseText.indexOf(originalWord, lastIndex);
             
             if (currentPosition !== -1) {
-                parts.push(escapeHtml(textWithAcceptedChanges.substring(lastIndex, currentPosition)));
+                parts.push(escapeHtml(baseText.substring(lastIndex, currentPosition)));
                 parts.push(`<mark class="${change.type}" data-id="${change.id}">${escapeHtml(originalWord)}</mark>`);
                 lastIndex = currentPosition + originalWord.length;
             }
         });
-        parts.push(escapeHtml(textWithAcceptedChanges.substring(lastIndex)));
+        parts.push(escapeHtml(baseText.substring(lastIndex)));
         
         return parts.join('');
     }
-    
     // =================================================================================
     // --- MODO ENFOQUE ---
     // =================================================================================
@@ -428,6 +399,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (swipeDistance < 0 && currentIndex < modeKeys.length - 1) newIndex++;
         if (newIndex !== currentIndex) setActiveMode(modeKeys[newIndex]);
     }
+    
     // =================================================================================
     // --- EVENT LISTENERS Y FUNCIONES AUXILIARES ---
     // =================================================================================
@@ -538,29 +510,55 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function handleDownload() {
-        let textToDownload = getFinalText();
-        if (!state.analysisCompleted) { textToDownload = dom.inputText.value; }
-        if (!textToDownload.trim()) { showUserMessage("No hay texto para descargar.", false); return; }
-        const header = `--- Texto Analizado por Veridian ---\nFecha: ${new Date().toLocaleString('es-ES')}\nNivel de IA: ${state.activeLevel}\n--------------------------------------\n\n`;
-        const footer = `\n\n--- Fin del Análisis ---`;
-        const fullContent = header + textToDownload + footer;
-        const blob = new Blob([fullContent], { type: 'text/plain;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = 'Veridian_Texto_Analizado.txt';
-        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    // REEMPLAZA ESTA FUNCIÓN COMPLETA
+function handleDownload() {
+    let textToDownload = getFinalText();
+    if (!state.analysisCompleted) {
+        textToDownload = dom.inputText.value;
+    }
+
+    if (!textToDownload.trim()) {
+        showUserMessage("No hay texto para descargar.", false);
+        return;
     }
     
+    const header = `--- Texto Analizado por Veridian ---\nFecha: ${new Date().toLocaleString('es-ES')}\nNivel de IA: ${state.activeLevel}\n--------------------------------------\n\n`;
+    const footer = `\n\n--- Fin del Análisis ---`;
+    const fullContent = header + textToDownload + footer;
+    const blob = new Blob([fullContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+
+    // --- CÓDIGO CORREGIDO ---
+    a.href = url;
+    a.download = 'Veridian_Texto_Analizado.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+    
     function getFinalText() {
-        if (!state.analysisCompleted) return '';
-        let baseText = (state.activeMode === 'revisado') ? state.restructuredText : state.originalText;
+        if (!state.analysisCompleted) return dom.inputText.value;
+
+        // Empezamos con el texto reestructurado como base para el resultado final.
+        let baseText = state.restructuredText;
+        
+        // Aplicamos solo los cambios que el usuario ha aceptado.
         const changesToApply = [...state.corrections, ...state.suggestions].filter(c => c.status === 'accepted');
+        
+        // Ordenamos los cambios del final al principio para no alterar los índices de los cambios pendientes.
         changesToApply.sort((a, b) => b.offset - a.offset).forEach(change => {
-            if (baseText.substring(change.offset, change.offset + change.original.length) === change.original) {
+            // Verificamos que el texto original del cambio todavía exista en la posición esperada.
+            if (state.originalText.substring(change.offset, change.offset + change.original.length) === change.original) {
+                 // Reemplazamos la sección correspondiente en el texto reestructurado.
+                 // NOTA: Esto asume que la reestructuración no altera las palabras originales, solo la puntuación y saltos de línea.
+                 // Para una lógica más compleja, se necesitaría un sistema de mapeo de caracteres.
                  baseText = baseText.substring(0, change.offset) + change.replacement + baseText.substring(change.offset + change.original.length);
             }
         });
+
         return baseText;
     }
 
@@ -586,31 +584,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleTooltipClick(e) {
-    e.stopPropagation();
-    const button = e.target.closest('button');
-    if (!button || !state.currentTooltip) return;
-
-    const { change } = state.currentTooltip;
-
-    if (button.classList.contains('accept-btn')) {
-        change.status = 'accepted';
-    } else if (button.classList.contains('ignore-btn')) {
-        change.status = 'ignored';
-    } else if (button.classList.contains('dict-btn')) {
-        const word = change.original.toLowerCase();
-        if (!state.dictionary.includes(word)) {
-            state.dictionary.push(word);
-            localStorage.setItem('veridian_dictionary', JSON.stringify(state.dictionary));
+        e.stopPropagation();
+        const button = e.target.closest('button');
+        if (!button || !state.currentTooltip) return;
+        const { change } = state.currentTooltip;
+        if (button.classList.contains('accept-btn')) {
+            change.status = 'accepted';
+        } else if (button.classList.contains('ignore-btn')) {
+            change.status = 'ignored';
+        } else if (button.classList.contains('dict-btn')) {
+            const word = change.original.toLowerCase();
+            if (!state.dictionary.includes(word)) {
+                state.dictionary.push(word);
+                localStorage.setItem('veridian_dictionary', JSON.stringify(state.dictionary));
+            }
+            state.corrections = state.corrections.filter(c => c.original.toLowerCase() !== word);
+        } else if (button.classList.contains('go-to-correction')) {
+            setActiveMode('correction');
         }
-        state.corrections = state.corrections.filter(c => c.original.toLowerCase() !== word);
-    } else if (button.classList.contains('go-to-correction')) {
-        setActiveMode('correction');
+        hideTooltip();
+        updateUI();
     }
-    
-    hideTooltip();
-    updateUI();
-}
-
 
     function hideTooltip() {
         if (state.currentTooltip) {
@@ -632,30 +626,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function positionTooltip(tooltip, target, container) {
         const targetRect = target.getBoundingClientRect();
-
         tooltip.style.visibility = 'hidden';
         tooltip.style.opacity = '1';
         const tooltipHeight = tooltip.offsetHeight;
         const tooltipWidth = tooltip.offsetWidth;
         tooltip.style.visibility = '';
         tooltip.style.opacity = '';
-
         let top;
         if (window.innerHeight - targetRect.bottom > tooltipHeight + 10) {
             top = targetRect.bottom + 8;
         } else {
             top = targetRect.top - tooltipHeight - 8;
         }
-
         let left = targetRect.left + (targetRect.width / 2) - (tooltipWidth / 2);
-
-        if (left < 10) {
-            left = 10;
-        }
+        if (left < 10) { left = 10; }
         if (left + tooltipWidth > window.innerWidth - 10) {
             left = window.innerWidth - tooltipWidth - 10;
         }
-
         tooltip.style.top = `${top}px`;
         tooltip.style.left = `${left}px`;
     }
@@ -694,5 +681,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateUI();
     }
 
+    // ¡Iniciamos la aplicación!
     initializeApp();
 });
+
