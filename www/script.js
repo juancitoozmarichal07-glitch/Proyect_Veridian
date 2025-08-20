@@ -16,8 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const MODELS = {
         'GRATUITO': { name: 'Gratuito (Groq)', engine: 'GROQ', model: 'llama3-8b-8192', max_words: 7000 },
-        'PREMIUM': { name: 'Premium (Llama)', engine: 'HUGGING_FACE', model: 'meta-llama/Llama-3-8b-chat-hf', max_words: 25000 },
-        'PRO': { name: 'PRO (Llama)', engine: 'HUGGING_FACE', model: 'meta-llama/Llama-3-70b-chat-hf', max_words: 50000 }
+        'PREMIUM': { name: 'Premium (Llama)', engine: 'HUGGING_FACE', model: 'meta-llama/Llama-3-8B-', max_words: 25000 },
+        'PRO': { name: 'PRO (Llama)', engine: 'HUGGING_FACE', model: 'meta-llama/Llama-3-70B-instruct', max_words: 50000 }
     };
 
     const MODES = {
