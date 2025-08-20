@@ -1,4 +1,4 @@
-name: Build Veridian (BOMBA ATÓMICA)
+name: Build Veridian (VICTORIA FINAL)
 
 on:
   push:
@@ -30,13 +30,12 @@ jobs:
           sed -i 's#%%GROQ_API_KEY%%#${{ secrets.GROQ_API_KEY }}#g' www/script.js
           sed -i 's#%%HUGGING_FACE_API_KEY%%#${{ secrets.HUGGING_FACE_API_KEY }}#g' www/script.js
 
-      # PASO 5 (MODERNO): Dejamos que Cordova use la última plataforma.
-      # Las versiones se controlan desde config.xml
       - name: 'PASO 5: Añadiendo la última plataforma Android...'
         run: cordova platform add android
 
-      - name: 'PASO 5.5: Instalando el plugin Whitelist...'
-        run: cordova plugin add cordova-plugin-whitelist
+      # PASO 5.5 (LA PIEZA FINAL): Usando el plugin moderno para el sistema moderno.
+      - name: 'PASO 5.5: Instalando el plugin Allow List...'
+        run: cordova plugin add cordova-plugin-allow-list
 
       - name: 'PASO 6: CONSTRUYENDO EL APK...'
         run: cordova build android --debug
