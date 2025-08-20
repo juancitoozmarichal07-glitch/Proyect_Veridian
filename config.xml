@@ -1,5 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.veridian.ai" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget id="com.veridian.ai" version="1.3.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    
+    <!-- 1. Información Básica del Proyecto -->
     <name>Veridian</name>
     <description>
         El corrector y analizador de textos inteligente.
@@ -7,17 +9,29 @@
     <author email="tucorreo@dominio.com" href="">
         Juan Gonzalo Marichal
     </author>
+    
+    <!-- 2. Contenido de la App -->
+    <!-- Le dice a Cordova que el archivo principal es index.html -->
     <content src="index.html" />
+    
+    <!-- 3. Permisos de Red (La Clave de Todo) -->
+    <!-- Permite que la app se conecte a CUALQUIER dominio. Esencial para las APIs. -->
     <access origin="*" />
+    
+    <!-- Permite que los enlaces dentro de la app abran URLs http y https. -->
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
-    <preference name="DisallowOverscroll" value="true" />
-    <preference name="android-build-tool" value="gradle" />
-        <!-- Preferencias para la compilación moderna de Android -->
+    
+    <!-- 4. Preferencias de Compilación (El Motor Moderno) -->
+    <!-- Estas líneas le dicen a GitHub Actions cómo construir la APK correctamente. -->
     <preference name="android-minSdkVersion" value="22" />
     <preference name="android-targetSdkVersion" value="33" />
     <preference name="android-compileSdkVersion" value="33" />
     <preference name="android-build-tool" value="33.0.2" />
     <preference name="AndroidXEnabled" value="true" />
-
+    
+    <!-- 5. Preferencias de Comportamiento (Opcionales pero recomendadas) -->
+    <!-- Evita el "rebote" al hacer scroll hasta el final en Android. -->
+    <preference name="DisallowOverscroll" value="true" />
+    
 </widget>

@@ -1,4 +1,4 @@
-name: Build Veridian (PLAN D - CONEXIÓN DIRECTA)
+name: Build Veridian (PLAN F - EL MANIFIESTO)
 
 on:
   push:
@@ -33,9 +33,8 @@ jobs:
       - name: 'PASO 5: Añadiendo la última plataforma Android...'
         run: cordova platform add android
 
-      # PASO 5.5 (PLAN D): Instalando el plugin directamente desde GitHub.
-      - name: 'PASO 5.5: Instalando el plugin Allow List (Directo)...'
-        run: cordova plugin add https://github.com/apache/cordova-plugin-allow-list.git
+      # PASO 5.5 ELIMINADO: No instalamos ningún plugin de permisos.
+      # Los permisos se gestionan directamente desde config.xml.
 
       - name: 'PASO 6: CONSTRUYENDO EL APK...'
         run: cordova build android --debug
