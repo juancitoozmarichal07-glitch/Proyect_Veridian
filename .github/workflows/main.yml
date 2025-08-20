@@ -30,11 +30,11 @@ jobs:
           sed -i 's#%%GROQ_API_KEY%%#${{ secrets.GROQ_API_KEY }}#g' www/script.js
           sed -i 's#%%HUGGING_FACE_API_KEY%%#${{ secrets.HUGGING_FACE_API_KEY }}#g' www/script.js
 
+      # PASO 5 (CORREGIDO): Forzando una versión estable de la plataforma Android.
       - name: 'PASO 5: Añadiendo la plataforma Android...'
-        run: cordova platform add android
+        run: cordova platform add android@12.0.1
 
-      # PASO 5.5 (CORREGIDO): Instalando el plugin CORRECTO (whitelist).
-      - name: 'PASO 5.5: Instalando el plugin Whitelist para las conexiones de red...'
+      - name: 'PASO 5.5: Instalando el plugin Whitelist...'
         run: cordova plugin add cordova-plugin-whitelist
 
       - name: 'PASO 6: CONSTRUYENDO EL APK DE DEPURACIÓN...'
